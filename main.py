@@ -1,6 +1,12 @@
 import time
+import cv2
 from controller.action_engine import ActionEngine
 from controller.gesture_mapper import GestureMapper
+from vision.hand_tracker import HandTracker
+from vision.mouse_gesture_detector import MouseGestureDetector
+from vision.gesture_classifier import GestureClassifier
+
+from controller.cursor_controller import CursorController
 
 
 # Initialize components
@@ -40,28 +46,122 @@ def main():
 
     print("=====================================")
     print("      GestureOS Started")
-    print("      Dynamic Action System Enabled")
+    print("      Camera Control Enabled")
     print("=====================================")
+
+    # Initialize vision systems
+    tracker = HandTracker(camera_index=1)
+    mouse_detector = MouseGestureDetector()
+    classifier = GestureClassifier()
+
+    # Initialize controllers
+    cursor = CursorController()
+
+    last_gesture_time = 0
+    gesture_cooldown = 1.0
+
 
     while True:
 
-        gesture_name, params = simulated_gesture_input()
+        frame, hands = tracker.update()
 
-        if gesture_name == "EXIT":
-            print("Exiting GestureOS")
+        if frame is None:
             break
 
-        if gesture_name is None:
-            continue
+        right_hand = None
+        left_hand = None
 
-        try:
-            # Execute action using new ActionEngine
-            engine.execute(gesture_name, params)
+        for hand in hands:
 
-        except Exception as e:
-            print("Execution error:", e)
+            if hand.hand_label == "Right":
+                right_hand = hand
 
-        time.sleep(0.1)
+            elif hand.hand_label == "Left":
+                left_hand = hand
+
+
+        # ==========================
+        # RIGHT HAND → MOUSE CONTROL
+        # ==========================
+
+        if right_hand:
+
+            mouse_result = mouse_detector.detect([right_hand])
+
+            gesture = mouse_result["gesture"]
+            position = mouse_result["position"]
+            scroll = mouse_result["scroll"]
+
+            if position:
+
+                x, y = position
+
+                if gesture == "MOVE_CURSOR":
+                    cursor.move_cursor(
+                        x, y,
+                        tracker.frame_width,
+                        tracker.frame_height
+                    )
+
+                elif gesture == "LEFT_CLICK":
+                    cursor.left_click()
+
+                elif gesture == "RIGHT_CLICK":
+                    cursor.right_click()
+
+                elif gesture == "DRAG":
+                    cursor.drag(
+                        x, y,
+                        tracker.frame_width,
+                        tracker.frame_height
+                    )
+
+                elif gesture == "DRAG_END":
+                    cursor.drag_end()
+
+                elif gesture == "SCROLL":
+                    cursor.scroll(scroll)
+
+
+        # ==========================
+        # LEFT HAND → GESTURE CONTROL
+        # ==========================
+
+        if left_hand:
+
+            gesture_name, confidence = classifier.predict(
+                left_hand,
+                tracker.frame_width,
+                tracker.frame_height
+            )
+
+            current_time = time.time()
+
+            if confidence > 0.85 and current_time - last_gesture_time > gesture_cooldown:
+
+                engine.execute(gesture_name, None)
+
+                last_gesture_time = current_time
+
+            cv2.putText(
+                frame,
+                f"{gesture_name} ({confidence:.2f})",
+                (10, 50),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0),
+                2
+            )
+
+
+        cv2.imshow("GestureOS", frame)
+
+        if cv2.waitKey(1) & 0xFF == 27:
+            break
+
+
+    tracker.release()
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
