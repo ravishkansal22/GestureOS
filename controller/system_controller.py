@@ -13,8 +13,16 @@ class SystemController:
 
         params = {}
 
+        # Pass cursor parameters if exist
         if x is not None and y is not None:
+
             params["x"] = x
             params["y"] = y
 
-        self.action_engine.execute(gesture_name, params)
+        try:
+
+            self.action_engine.execute(gesture_name, params)
+
+        except Exception as e:
+
+            print("Execution error:", e)

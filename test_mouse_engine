@@ -1,0 +1,25 @@
+import cv2
+
+from vision.hand_tracker import HandTracker
+from vision.mouse_gesture_detector import MouseGestureDetector
+
+
+tracker = HandTracker()
+detector = MouseGestureDetector()
+
+
+while True:
+
+    frame, hands = tracker.update()
+
+    result = detector.detect(hands)
+
+    print(result)
+
+    cv2.imshow("Mouse Engine", frame)
+
+    if cv2.waitKey(1) & 0xFF == 27:
+        break
+
+
+tracker.release()
