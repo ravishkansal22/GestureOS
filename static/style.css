@@ -1,0 +1,220 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #000;
+    font-family: 'Work Sans', sans-serif;
+    color: #00ff88;
+    overflow-x: hidden;
+}
+
+/* HAMBURGER MENU */
+.menu-btn {
+    position: fixed;
+    top: 25px;
+    left: 25px;
+    width: 30px;
+    height: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+.menu-btn span {
+    height: 3px;
+    width: 100%;
+    background: #00ff88;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+/* SIDEBAR */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 260px;
+    height: 100%;
+    background: #050505;
+    border-right: 2px solid #00ff88;
+    box-shadow: 0 0 40px #00ff88;
+    padding: 100px 20px;
+    transition: 0.4s ease;
+    z-index: 1000;
+}
+
+.feature {
+    display: block;
+    padding: 15px;
+    margin-bottom: 25px;
+    border: 1px solid #00ff8850;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.feature:hover {
+    background: #00ff88;
+    color: #000;
+    box-shadow: 0 0 20px #00ff88;
+}
+
+/* OVERLAY */
+.overlay {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+    z-index: 500;
+}
+
+/* TOGGLE EFFECT */
+#menu-toggle:checked ~ .sidebar {
+    left: 0;
+}
+
+#menu-toggle:checked ~ .overlay {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* HEADER */
+header {
+    text-align: center;
+    padding: 40px 0;
+}
+
+header h1 {
+    font-size: 52px;
+    letter-spacing: 8px;
+    color: #fff;
+}
+
+header h1 span {
+    color: #00ff88;
+    text-shadow: 0 0 20px #00ff88;
+}
+
+.subtitle {
+    opacity: 0.6;
+    letter-spacing: 4px;
+}
+
+/* MAIN */
+.main-container {
+    width: 90%;
+    margin: auto;
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.camera-panel {
+    width: 45%;
+    height: 400px;
+    border: 2px solid #00ff88;
+    border-radius: 20px;
+    box-shadow: 0 0 30px #00ff8840;
+}
+
+.control-core {
+    width: 250px;
+    height: 250px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.core-ring {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    border: 3px solid #00ff88;
+    box-shadow: 0 0 40px #00ff88;
+    animation: pulse 2s infinite ease-in-out;
+}
+
+.modules {
+    width: 25%;
+}
+
+.module-card {
+    background: #0a0a0a;
+    border: 1px solid #00ff8850;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+/* PANELS */
+.panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 400px;
+    background: #050505;
+    border: 2px solid #00ff88;
+    box-shadow: 0 0 40px #00ff88;
+    padding: 30px;
+    border-radius: 20px;
+    transition: 0.4s ease;
+    z-index: 2000;
+}
+
+.panel h2 {
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #00ff88;
+}
+
+.panel-box, .metric {
+    padding: 10px;
+    border: 1px solid #00ff8850;
+    margin-bottom: 15px;
+    border-radius: 8px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #111;
+    border-radius: 10px;
+    margin: 15px 0;
+}
+
+.progress {
+    width: 60%;
+    height: 100%;
+    background: #00ff88;
+    border-radius: 10px;
+}
+
+/* PANEL ACTIVATION */
+#remap-toggle:checked ~ .remap-panel {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+#trainer-toggle:checked ~ .trainer-panel {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+#monitor-toggle:checked ~ .monitor-panel {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* ANIMATION */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}

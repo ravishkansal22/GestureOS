@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GestureOS Control Nexus</title>
+        <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+
+<!-- Sidebar Toggle -->
+<input type="checkbox" id="menu-toggle" hidden>
+
+<label for="menu-toggle" class="menu-btn">
+    <span></span>
+    <span></span>
+    <span></span>
+</label>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <label for="remap-toggle" class="feature">Remapping System</label>
+    <label for="trainer-toggle" class="feature">Smart Gesture Trainer</label>
+    <label for="monitor-toggle" class="feature">Performance Monitor</label>
+</div>
+
+<!-- Overlay -->
+<div class="overlay"></div>
+
+<!-- Feature Toggles -->
+<input type="checkbox" id="remap-toggle" hidden>
+<input type="checkbox" id="trainer-toggle" hidden>
+<input type="checkbox" id="monitor-toggle" hidden>
+
+<header>
+    <h1>GESTURE<span>OS</span></h1>
+    <p class="subtitle">Real-Time Gesture Engine</p>
+</header>
+
+<div class="main-container">
+    <div class="camera-panel"></div>
+
+    <div class="control-core">
+        <div class="core-ring"></div>
+        <div class="core-text">SYSTEM ACTIVE</div>
+    </div>
+
+    <div class="modules">
+        <div class="module-card">
+            <h3>Hand Tracking</h3>
+            <p>Status: Active</p>
+        </div>
+        <div class="module-card">
+            <h3>Gesture Engine</h3>
+            <p>Monitoring</p>
+        </div>
+    </div>
+</div>
+
+<!-- REMAP PANEL -->
+<div class="panel remap-panel">
+    <h2>Remapping System</h2>
+    <div class="panel-box">Thumb + Index → Volume</div>
+    <div class="panel-box">Fist → Pause</div>
+</div>
+
+<!-- TRAINER PANEL -->
+<div class="panel trainer-panel">
+    <h2>Smart Gesture Trainer</h2>
+    <div class="progress-bar">
+        <div class="progress"></div>
+    </div>
+    <p>3 / 5 Samples Recorded</p>
+</div>
+
+<!-- MONITOR PANEL -->
+<div class="panel monitor-panel">
+    <h2>Performance Monitor</h2>
+    <div class="metric">FPS: 28</div>
+    <div class="metric">Latency: 35ms</div>
+    <div class="metric">Confidence: 94%</div>
+</div>
+
+</body>
+</html>
