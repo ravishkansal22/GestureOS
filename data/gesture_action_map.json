@@ -1,21 +1,9 @@
 {
-    "OPEN_CHROME": "open_chrome",
-    "VOLUME_UP": "volume_up",
-    "VOLUME_DOWN": "volume_down",
-    "BRIGHTNESS_UP": "brightness_up",
-    "BRIGHTNESS_DOWN": "brightness_down",
-    "SWITCH_APP": "switch_app",
-    "TAKE_SCREENSHOT": "take_screenshot",
-    "CLOSE_APP": "close_app",
-    "OPEN_YOUTUBE": {
-    "action": "open_website",
-    "url": "https://youtube.com"},
+    "OPEN_PALM": "volume_up",
     "FIST": "volume_down",
-    "THREE_FINGERS": "screenshot",
-    "THUMBS_UP": "volume_up",
-    "PEACE_SIGN": "switch_app",
-    "OPEN_PALM": "open_start_menu"
+    "PEACE": "open_calculator",
+    "THUMBS_UP": "open_chrome",
+    "ONE_FINGER": "switch_app",
+    "THREE_FINGERS": "open_notepad",
+    "FOUR_FINGERS": "close_app"
 }
-
-
-

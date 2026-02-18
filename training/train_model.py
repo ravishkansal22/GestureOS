@@ -2,15 +2,18 @@ import os
 import json
 import numpy as np
 import pandas as pd
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATASET_PATH = os.path.join(BASE_DIR, "data", "dataset.csv")
+MODEL_PATH = os.path.join(BASE_DIR, "models", "gesture_model.keras")
+LABEL_PATH = os.path.join(BASE_DIR, "models", "gesture_labels.json")
+
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 from tensorflow import keras
 
-
-DATASET_PATH = os.path.join("data", "dataset.csv")
-MODEL_PATH = os.path.join("models", "gesture_model.keras")
-LABEL_PATH = os.path.join("models", "gesture_labels.json")
 
 
 def load_dataset():

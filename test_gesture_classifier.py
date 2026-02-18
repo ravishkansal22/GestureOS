@@ -4,7 +4,7 @@ from vision.hand_tracker import HandTracker
 from vision.gesture_classifier import GestureClassifier
 
 
-tracker = HandTracker(camera_index=1)
+tracker = HandTracker(camera_index=0)
 classifier = GestureClassifier()
 
 

@@ -36,7 +36,7 @@ class ActionEngine:
                 else:
                     action_function()
 
-                print(f"Executed: {gesture_name} → {action_data}")
+                print(f"Executed: {gesture_name} -> {action_data}")
 
             # CASE 2: action with parameters
             elif isinstance(action_data, dict):

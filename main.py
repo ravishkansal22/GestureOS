@@ -1,5 +1,11 @@
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+import os
 import time
 import cv2
+import argparse
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "models", "gesture_model.keras")
 from controller.action_engine import ActionEngine
 from controller.gesture_mapper import GestureMapper
 from vision.hand_tracker import HandTracker
@@ -42,7 +48,7 @@ def simulated_gesture_input():
     return gesture, None
 
 
-def main():
+def main(show_window=True):
 
     print("=====================================")
     print("      GestureOS Started")
@@ -50,9 +56,11 @@ def main():
     print("=====================================")
 
     # Initialize vision systems
-    tracker = HandTracker(camera_index=1)
+    tracker = HandTracker(camera_index=0)
     mouse_detector = MouseGestureDetector()
     classifier = GestureClassifier()
+
+    model_last_modified = os.path.getmtime(MODEL_PATH)
 
     # Initialize controllers
     cursor = CursorController()
@@ -62,6 +70,15 @@ def main():
 
 
     while True:
+        current_modified = os.path.getmtime(MODEL_PATH)
+
+        if current_modified != model_last_modified:
+
+            print("New model detected. Reloading...")
+
+            classifier = GestureClassifier()
+
+            model_last_modified = current_modified
 
         frame, hands = tracker.update()
 
@@ -154,10 +171,12 @@ def main():
             )
 
 
-        cv2.imshow("GestureOS", frame)
+        if show_window:
+            cv2.imshow("GestureOS", frame)
 
         if cv2.waitKey(1) & 0xFF == 27:
             break
+
 
 
     tracker.release()
@@ -165,4 +184,15 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--background",
+        action="store_true",
+        help="Run GestureOS in background mode"
+    )
+
+    args = parser.parse_args()
+
+    main(show_window=not args.background)
