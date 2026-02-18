@@ -5,5 +5,13 @@
     "THUMBS_UP": "open_chrome",
     "ONE_FINGER": "switch_app",
     "THREE_FINGERS": "open_notepad",
-    "FOUR_FINGERS": "close_app"
+    "FOUR_FINGERS": "close_app",
+    "OPEN_YOUTUBE": {
+        "type": "website",
+        "value": "https://www.youtube.com/"
+    },
+    "MIDDLE_FINGER": {
+        "type": "system",
+        "value": "brightness_up"
+    }
 }

@@ -42,20 +42,53 @@ def add_gesture():
     gesture = input("Enter new gesture name: ").strip().upper()
 
     if gesture in config:
-
         print("Gesture already exists.")
         return
 
-    action = input("Enter action to assign: ").strip()
+    print("\nSelect action type:")
+    print("1. Website")
+    print("2. Application")
+    print("3. System action")
 
-    config[gesture] = action
+    choice = input("Enter choice: ")
+
+    if choice == "1":
+
+        url = input("Enter website URL: ").strip()
+
+        config[gesture] = {
+            "type": "website",
+            "value": url
+        }
+
+    elif choice == "2":
+
+        app = input("Enter full app path or app name: ").strip()
+
+        config[gesture] = {
+            "type": "app",
+            "value": app
+        }
+
+    elif choice == "3":
+
+        action = input("Enter system action (volume_up, etc): ").strip()
+
+        config[gesture] = {
+            "type": "system",
+            "value": action
+        }
+
+    else:
+        print("Invalid choice.")
+        return
 
     save_config(config)
 
-    print(f"\nGesture '{gesture}' added.")
+    print("Gesture added successfully.")
 
-    # Automatically retrain
     retrain_model()
+
 
 
 def edit_gesture():
