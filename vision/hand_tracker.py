@@ -43,7 +43,7 @@ class HandTracker:
             min_tracking_confidence=tracking_confidence,
         )
 
-        self.cap = cv2.VideoCapture(camera_index)
+        self.cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
 
         if not self.cap.isOpened():
             raise Exception("Camera not accessible")

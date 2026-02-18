@@ -4,9 +4,9 @@ import os
 
 class GestureMapper:
 
-    def __init__(self, mapping_file="data/gesture_action_map.json"):
+    def __init__(self, BASE_DIR = os.path.dirname(os.path.dirname(__file__))):
 
-        self.mapping_file = mapping_file
+        self.mapping_file = os.path.join(BASE_DIR, "data", "gesture_action_map.json")
         self.mapping = {}
 
         self.load_mapping()

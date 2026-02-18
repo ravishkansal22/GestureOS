@@ -1,5 +1,5 @@
 from controller.gesture_mapper import GestureMapper
-import controller.actions as actions
+from controller.actions import execute_action
 
 
 class ActionEngine:
@@ -10,9 +10,15 @@ class ActionEngine:
 
     def execute(self, gesture_name, runtime_params=None):
 
+        # Always reload latest mapping
         self.mapper.load_mapping()
 
         action_data = self.mapper.get_action(gesture_name)
+
+        # Debug prints (keep for now)
+        print("DEBUG gesture:", gesture_name)
+        print("DEBUG mapping:", action_data)
+        print("DEBUG type:", type(action_data))
 
         if action_data is None:
 
@@ -21,50 +27,35 @@ class ActionEngine:
 
         try:
 
-            # CASE 1: simple action string
+            # Case 1: simple string action
             if isinstance(action_data, str):
 
-                action_function = getattr(actions, action_data, None)
+                execute_action(action_data)
+                return
 
-                if action_function is None:
-
-                    print(f"Action function not found: {action_data}")
-                    return
-
-                if runtime_params:
-                    action_function(**runtime_params)
-                else:
-                    action_function()
-
-                print(f"Executed: {gesture_name} → {action_data}")
-
-            # CASE 2: action with parameters
-            elif isinstance(action_data, dict):
+            # Case 2: dictionary action
+            if isinstance(action_data, dict):
 
                 action_name = action_data.get("action")
 
-                if not isinstance(action_name, str):
+                if not action_name:
 
-                    print("Invalid action format. 'action' must be string.")
-                    return
-
-                action_function = getattr(actions, action_name, None)
-
-                if action_function is None:
-
-                    print(f"Action function not found: {action_name}")
+                    print("Invalid action format: missing 'action' key")
                     return
 
                 params = dict(action_data)
 
+                # Remove "action" key
                 params.pop("action", None)
 
                 if runtime_params:
                     params.update(runtime_params)
 
-                action_function(**params)
+                execute_action(action_name, **params)
 
-                print(f"Executed: {gesture_name} → {action_name}")
+                return
+
+            print("Invalid action format: unsupported type")
 
         except Exception as e:
 

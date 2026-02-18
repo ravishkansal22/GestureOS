@@ -10,7 +10,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from vision.hand_tracker import HandTracker
 
 
-DATASET_PATH = os.path.join("data", "dataset.csv")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATASET_PATH = os.path.join(BASE_DIR, "data", "dataset.csv")
 RECORD_SECONDS = 5
 COUNTDOWN_SECONDS = 3
 
@@ -20,7 +21,7 @@ class AutoGestureCollector:
     def __init__(self, gesture_name):
 
         self.gesture_name = gesture_name
-        self.tracker = HandTracker(max_hands=2)
+        self.tracker = HandTracker(max_hands=2, camera_index=0)
 
         os.makedirs("data", exist_ok=True)
 
@@ -156,7 +157,7 @@ class AutoGestureCollector:
 
 if __name__ == "__main__":
 
-    gesture_name = input("Enter gesture name: ")
+    gesture_name = input("Enter gesture name: ").strip().upper()
 
     collector = AutoGestureCollector(gesture_name)
 

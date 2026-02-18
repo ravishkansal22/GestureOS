@@ -37,7 +37,8 @@ class GestureExecutor:
             # IMPORTANT: call system_controller.execute_action()
             self.system_controller.execute_action(action_name, x, y)
 
-            print(f"Executed gesture: {gesture_name} → action: {action_name}")
+            print(f"Executing: {gesture_name} -> {action_name}")
+
 
         except Exception as e:
 

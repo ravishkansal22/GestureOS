@@ -1,21 +1,36 @@
 {
-    "OPEN_CHROME": "open_chrome",
-    "VOLUME_UP": "volume_up",
-    "VOLUME_DOWN": "volume_down",
-    "BRIGHTNESS_UP": "brightness_up",
-    "BRIGHTNESS_DOWN": "brightness_down",
-    "SWITCH_APP": "switch_app",
-    "TAKE_SCREENSHOT": "take_screenshot",
-    "CLOSE_APP": "close_app",
-    "OPEN_YOUTUBE": {
-    "action": "open_website",
-    "url": "https://youtube.com"},
-    "FIST": "volume_down",
-    "THREE_FINGERS": "screenshot",
-    "THUMBS_UP": "volume_up",
-    "PEACE_SIGN": "switch_app",
-    "OPEN_PALM": "open_start_menu"
+    "OPEN_PALM": {
+        "action": "volume_up"
+    },
+    "PEACE": {
+        "action": "switch_app"
+    },
+    "THREE_FINGERS": {
+        "action": "open_website",
+        "url": "https://youtube.com"
+    },
+    "FOUR_FINGERS": {
+        "action": "open_program",
+        "path": "notepad.exe"
+    },
+    "LEFT_SWIPE_DOWN": {
+        "action": "take_screenshot"
+    },
+    "LEFT_SWIPE_UP": {
+        "action": "open_website",
+        "url": "https://chat.openai.com"
+    },
+    "LEFT_SWIPE_LEFT": {
+        "action": "switch_app"
+    },
+    "LEFT_SWIPE_RIGHT": {
+        "action": "close_app"
+    },
+    "THUMBS_UP": {
+        "action": "volume_down"
+    },
+    "PINKY_FINGER": {
+        "type": "system",
+        "value": "None"
+    }
 }
-
-
-
