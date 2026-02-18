@@ -1,9 +1,5 @@
 from controller.gesture_mapper import GestureMapper
-import controller.actions as actions
-
-import webbrowser
-import subprocess
-import os
+from controller.actions import execute_action
 
 
 class ActionEngine:
@@ -14,10 +10,15 @@ class ActionEngine:
 
     def execute(self, gesture_name, runtime_params=None):
 
-        # Reload latest mapping
+        # Always reload latest mapping
         self.mapper.load_mapping()
 
         action_data = self.mapper.get_action(gesture_name)
+
+        # Debug prints (keep for now)
+        print("DEBUG gesture:", gesture_name)
+        print("DEBUG mapping:", action_data)
+        print("DEBUG type:", type(action_data))
 
         if action_data is None:
 
@@ -26,113 +27,35 @@ class ActionEngine:
 
         try:
 
-            # ==============================
-            # CASE 1: simple system action
-            # example: "volume_up"
-            # ==============================
+            # Case 1: simple string action
             if isinstance(action_data, str):
 
-                action_function = getattr(actions, action_data, None)
+                execute_action(action_data)
+                return
 
-                if action_function is None:
+            # Case 2: dictionary action
+            if isinstance(action_data, dict):
 
-                    print(f"Action function not found: {action_data}")
+                action_name = action_data.get("action")
+
+                if not action_name:
+
+                    print("Invalid action format: missing 'action' key")
                     return
+
+                params = dict(action_data)
+
+                # Remove "action" key
+                params.pop("action", None)
 
                 if runtime_params:
-                    action_function(**runtime_params)
-                else:
-                    action_function()
+                    params.update(runtime_params)
 
-                print(f"Executed: {gesture_name} -> {action_data}")
+                execute_action(action_name, **params)
 
-            # ==============================
-            # CASE 2: structured action
-            # example:
-            # { "type": "website", "value": "https://youtube.com" }
-            # ==============================
-            elif isinstance(action_data, dict):
+                return
 
-                action_type = action_data.get("type")
-                value = action_data.get("value")
-
-                if action_type is None or value is None:
-
-                    print("Invalid action format.")
-                    return
-
-                # WEBSITE ACTION
-                if action_type == "website":
-
-                    webbrowser.open(value)
-
-                    print(f"Opened website: {value}")
-
-                # APPLICATION ACTION
-                elif action_type == "app":
-
-                    try:
-
-                        # Try opening directly
-                        subprocess.Popen(value)
-
-                        print(f"Opened application: {value}")
-
-                    except Exception:
-
-                        try:
-                            # Try opening via shell
-                            os.system(f'start "" "{value}"')
-
-                            print(f"Opened application via shell: {value}")
-
-                        except Exception as e:
-
-                            print("Failed to open application:", e)
-
-                # SYSTEM ACTION
-                elif action_type == "system":
-
-                    action_function = getattr(actions, value, None)
-
-                    if action_function is None:
-
-                        print(f"System action not found: {value}")
-                        return
-
-                    if runtime_params:
-                        action_function(**runtime_params)
-                    else:
-                        action_function()
-
-                    print(f"Executed system action: {value}")
-
-                # LEGACY SUPPORT (old format)
-                elif "action" in action_data:
-
-                    action_name = action_data.get("action")
-
-                    action_function = getattr(actions, action_name, None)
-
-                    if action_function is None:
-
-                        print(f"Action function not found: {action_name}")
-                        return
-
-                    params = dict(action_data)
-
-                    params.pop("action", None)
-
-                    if runtime_params:
-                        params.update(runtime_params)
-
-                    action_function(**params)
-
-                    print(f"Executed: {gesture_name} -> {action_name}")
-
-                else:
-
-                    print("Unknown action type.")
+            print("Invalid action format: unsupported type")
 
         except Exception as e:
 

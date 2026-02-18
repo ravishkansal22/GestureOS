@@ -232,8 +232,14 @@ def execute_action(action_name, **kwargs):
     action_function = ACTION_REGISTRY[action_name]
 
     try:
-        action_function(**kwargs)
-    except TypeError:
-        action_function()
+        # If parameters exist, use them
+        if kwargs:
+            action_function(**kwargs)
+        else:
+            action_function()
 
-    print(f"Executed action: {action_name}")
+        print(f"Executed action: {action_name}")
+
+    except Exception as e:
+        print(f"Error executing action '{action_name}': {e}")
+

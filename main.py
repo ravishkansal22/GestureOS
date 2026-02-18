@@ -13,6 +13,7 @@ from vision.mouse_gesture_detector import MouseGestureDetector
 from vision.gesture_classifier import GestureClassifier
 
 from controller.cursor_controller import CursorController
+from vision.temporal_gesture_detection import TemporalGestureDetector
 
 
 # Initialize components
@@ -59,6 +60,7 @@ def main(show_window=True):
     tracker = HandTracker(camera_index=0)
     mouse_detector = MouseGestureDetector()
     classifier = GestureClassifier()
+    temporal_detector = TemporalGestureDetector()
 
     model_last_modified = os.path.getmtime(MODEL_PATH)
 
@@ -70,6 +72,10 @@ def main(show_window=True):
 
 
     while True:
+
+        gesture_name = None
+        confidence = 0.0
+
         current_modified = os.path.getmtime(MODEL_PATH)
 
         if current_modified != model_last_modified:
@@ -147,35 +153,77 @@ def main(show_window=True):
         if left_hand:
 
             gesture_name, confidence = classifier.predict(
-                left_hand,
-                tracker.frame_width,
-                tracker.frame_height
+                 left_hand,
+                 tracker.frame_width,
+                 tracker.frame_height
             )
 
-            current_time = time.time()
+    # DEBUG: verify PINKY detection
+            print("Detected gesture:", gesture_name, "Confidence:", confidence)
 
-            if confidence > 0.85 and current_time - last_gesture_time > gesture_cooldown:
+    # Initialize temporal gesture variable
+            temporal_gesture = None
 
-                engine.execute(gesture_name, None)
+    # Activate temporal mode ONLY when PINKY is held
+            if gesture_name == "PINKY_FINGER" and confidence > 0.90:
 
-                last_gesture_time = current_time
+                temporal_gesture = temporal_detector.update(left_hand)
 
-            cv2.putText(
-                frame,
-                f"{gesture_name} ({confidence:.2f})",
-                (10, 50),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0),
-                2
-            )
+                if temporal_gesture:
 
+                    engine.execute(temporal_gesture)
+
+                    cv2.putText(
+                        frame,
+                        "TEMPORAL: " + temporal_gesture,
+                         (10, 100),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1,
+                         (255, 0, 0),
+                         2
+                     )
+
+        # Show temporal mode indicator
+                cv2.putText(
+                    frame,
+                    "TEMPORAL MODE ACTIVE",
+                    (10, 150),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8,
+                    (0, 255, 255),
+                    2
+                )
+
+            else:
+                temporal_detector.reset()
+
+    # Execute static gestures normally
+        current_time = time.time()
+
+        if confidence > 0.85 and current_time - last_gesture_time > gesture_cooldown:
+
+            engine.execute(gesture_name, None)
+
+            last_gesture_time = current_time
+
+    # Display static gesture
+        cv2.putText(
+            frame,
+            f"{gesture_name} ({confidence:.2f})",
+            (10, 50),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 255, 0),
+            2
+        )
 
         if show_window:
             cv2.imshow("GestureOS", frame)
 
         if cv2.waitKey(1) & 0xFF == 27:
             break
+
+
 
 
 

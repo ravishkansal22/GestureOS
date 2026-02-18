@@ -1,17 +1,36 @@
 {
-    "OPEN_PALM": "volume_up",
-    "FIST": "volume_down",
-    "PEACE": "open_calculator",
-    "THUMBS_UP": "open_chrome",
-    "ONE_FINGER": "switch_app",
-    "THREE_FINGERS": "open_notepad",
-    "FOUR_FINGERS": "close_app",
-    "OPEN_YOUTUBE": {
-        "type": "website",
-        "value": "https://www.youtube.com/"
+    "OPEN_PALM": {
+        "action": "volume_up"
     },
-    "MIDDLE_FINGER": {
+    "PEACE": {
+        "action": "switch_app"
+    },
+    "THREE_FINGERS": {
+        "action": "open_website",
+        "url": "https://youtube.com"
+    },
+    "FOUR_FINGERS": {
+        "action": "open_program",
+        "path": "notepad.exe"
+    },
+    "LEFT_SWIPE_DOWN": {
+        "action": "take_screenshot"
+    },
+    "LEFT_SWIPE_UP": {
+        "action": "open_website",
+        "url": "https://chat.openai.com"
+    },
+    "LEFT_SWIPE_LEFT": {
+        "action": "switch_app"
+    },
+    "LEFT_SWIPE_RIGHT": {
+        "action": "close_app"
+    },
+    "THUMBS_UP": {
+        "action": "volume_down"
+    },
+    "PINKY_FINGER": {
         "type": "system",
-        "value": "brightness_up"
+        "value": "None"
     }
 }
