@@ -1,111 +1,131 @@
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
+
 import os
 import time
 import cv2
-import argparse
+import threading
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "gesture_model.keras")
+
 from controller.action_engine import ActionEngine
 from controller.gesture_mapper import GestureMapper
 from vision.hand_tracker import HandTracker
 from vision.mouse_gesture_detector import MouseGestureDetector
 from vision.gesture_classifier import GestureClassifier
-
+from backend.gesture_state import set_gesture
 from controller.cursor_controller import CursorController
 from vision.temporal_gesture_detection import TemporalGestureDetector
 
 
-# Initialize components
-mapper = GestureMapper()
-engine = ActionEngine()
+# ============================================================
+# 🔥 GLOBAL SHARED STATE (used by server.py)
+# ============================================================
+
+latest_prediction = {
+    "gesture": None,
+    "action": None,
+    "confidence": 0.0,
+    "hand": None,
+    "timestamp": None
+}
+
+system_state = {
+    "model_version": "v2.4.1",
+    "accuracy": 0.0,
+    "fps": 0,
+    "latency": 0,
+    "total_gestures": 0,
+    "custom_gestures": 0,
+    "status": "INITIALIZING",
+    "camera": "DISCONNECTED"
+}
 
 
-def simulated_gesture_input():
-
-    # Reload latest gesture mapping
-    mapper.load_mapping()
-
-    gestures = mapper.list_gestures()
-
-    print("\nAvailable gestures:")
-    for gesture in gestures:
-        print("-", gesture)
-
-    print("- EXIT")
-
-    gesture = input("\nEnter gesture: ").strip()
-
-    if gesture == "MOVE_CURSOR":
-
-        try:
-            x = float(input("Enter X (0–1): "))
-            y = float(input("Enter Y (0–1): "))
-            return gesture, {"x": x, "y": y}
-        except:
-            print("Invalid coordinates")
-            return None, None
-
-    return gesture, None
+# Thread control
+_engine_running = False
+_engine_thread = None
+latest_frame = None
 
 
-def main(show_window=True):
+
+def get_latest_frame():
+    return latest_frame
+
+# ============================================================
+# 🎯 ENGINE START FUNCTION (called by server.py)
+# ============================================================
+
+def start_engine(show_window=False):
+
+    global _engine_running
+
+    if _engine_running:
+        return
+
+    _engine_running = True
 
     print("=====================================")
-    print("      GestureOS Started")
-    print("      Camera Control Enabled")
+    print("      GestureOS Engine Started")
     print("=====================================")
 
-    # Initialize vision systems
+    # Initialize components
     tracker = HandTracker(camera_index=0)
     mouse_detector = MouseGestureDetector()
     classifier = GestureClassifier()
     temporal_detector = TemporalGestureDetector()
-
-    model_last_modified = os.path.getmtime(MODEL_PATH)
-
-    # Initialize controllers
     cursor = CursorController()
+
+    mapper = GestureMapper()
+    engine = ActionEngine()
+    system_state["custom_gestures"] = len(mapper.list_gestures())
+    system_state["status"] = "ONLINE"
+    system_state["camera"] = "CONNECTED"
+    system_state["status"] = "ACTIVE"
+    system_state["camera"] = "CONNECTED"
+
 
     last_gesture_time = 0
     gesture_cooldown = 1.0
 
+    model_last_modified = os.path.getmtime(MODEL_PATH)
 
-    while True:
+    fps_counter = 0
+    fps_timer = time.time()
 
-        gesture_name = None
-        confidence = 0.0
+    while _engine_running:
+        if not _engine_running:
+           break
 
-        current_modified = os.path.getmtime(MODEL_PATH)
-
-        if current_modified != model_last_modified:
-
-            print("New model detected. Reloading...")
-
-            classifier = GestureClassifier()
-
-            model_last_modified = current_modified
+        start_time = time.time()
 
         frame, hands = tracker.update()
 
         if frame is None:
             break
+        global latest_frame
+        latest_frame = frame.copy()
 
         right_hand = None
         left_hand = None
-
+        
+        gesture_name = None
+        confidence = 0.0
+        detected_action = None
+        detected_hand = None
+        
         for hand in hands:
-
             if hand.hand_label == "Right":
                 right_hand = hand
-
             elif hand.hand_label == "Left":
                 left_hand = hand
 
+    
 
-        # ==========================
+        # =====================================================
         # RIGHT HAND → MOUSE CONTROL
-        # ==========================
+        # =====================================================
 
         if right_hand:
 
@@ -116,131 +136,159 @@ def main(show_window=True):
             scroll = mouse_result["scroll"]
 
             if position:
-
                 x, y = position
 
                 if gesture == "MOVE_CURSOR":
-                    cursor.move_cursor(
-                        x, y,
-                        tracker.frame_width,
-                        tracker.frame_height
-                    )
+                    cursor.move_cursor(x, y, tracker.frame_width, tracker.frame_height)
+                    detected_action = "CURSOR_MOVE"
 
                 elif gesture == "LEFT_CLICK":
                     cursor.left_click()
+                    detected_action = "MOUSE_LEFT_CLICK"
 
                 elif gesture == "RIGHT_CLICK":
                     cursor.right_click()
+                    detected_action = "MOUSE_RIGHT_CLICK"
 
                 elif gesture == "DRAG":
-                    cursor.drag(
-                        x, y,
-                        tracker.frame_width,
-                        tracker.frame_height
-                    )
+                    cursor.drag(x, y, tracker.frame_width, tracker.frame_height)
+                    detected_action = "MOUSE_DRAG"
 
                 elif gesture == "DRAG_END":
                     cursor.drag_end()
 
                 elif gesture == "SCROLL":
                     cursor.scroll(scroll)
+                    detected_action = "SCROLL"
 
+                gesture_name = gesture
+                confidence = 1.0
+                detected_hand = "RIGHT"
 
-        # ==========================
-        # LEFT HAND → GESTURE CONTROL
-        # ==========================
+        # =====================================================
+        # LEFT HAND → CLASSIFIED GESTURES
+        # =====================================================
 
         if left_hand:
 
             gesture_name, confidence = classifier.predict(
-                 left_hand,
-                 tracker.frame_width,
-                 tracker.frame_height
+                left_hand,
+                tracker.frame_width,
+                tracker.frame_height
             )
 
-    # DEBUG: verify PINKY detection
-            print("Detected gesture:", gesture_name, "Confidence:", confidence)
+            set_gesture(gesture_name)
+            detected_hand = "LEFT"
 
-    # Initialize temporal gesture variable
-            temporal_gesture = None
-
-    # Activate temporal mode ONLY when PINKY is held
             if gesture_name == "PINKY_FINGER" and confidence > 0.90:
-
                 temporal_gesture = temporal_detector.update(left_hand)
 
                 if temporal_gesture:
-
                     engine.execute(temporal_gesture)
-
-                    cv2.putText(
-                        frame,
-                        "TEMPORAL: " + temporal_gesture,
-                         (10, 100),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        1,
-                         (255, 0, 0),
-                         2
-                     )
-
-        # Show temporal mode indicator
-                cv2.putText(
-                    frame,
-                    "TEMPORAL MODE ACTIVE",
-                    (10, 150),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    (0, 255, 255),
-                    2
-                )
+                    detected_action = temporal_gesture
 
             else:
                 temporal_detector.reset()
 
-    # Execute static gestures normally
+        # =====================================================
+        # STATIC EXECUTION WITH COOLDOWN
+        # =====================================================
+
         current_time = time.time()
 
-        if confidence > 0.85 and current_time - last_gesture_time > gesture_cooldown:
-
+        if (
+            gesture_name
+            and confidence > 0.85
+            and current_time - last_gesture_time > gesture_cooldown
+        ):
             engine.execute(gesture_name, None)
-
+            system_state["total_gestures"] += 1
             last_gesture_time = current_time
 
-    # Display static gesture
-        cv2.putText(
-            frame,
-            f"{gesture_name} ({confidence:.2f})",
-            (10, 50),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 255, 0),
-            2
-        )
+        # =====================================================
+        # UPDATE SHARED STATE FOR FRONTEND
+        # =====================================================
+
+        if gesture_name:
+            latest_prediction.update({
+                "gesture": gesture_name,
+                "action": detected_action,
+                "confidence": round(confidence * 100, 2),
+                "hand": detected_hand,
+                "timestamp": time.time()
+            })
+            system_state["accuracy"] = round(confidence * 100, 2)
+        else:
+    # Reset prediction when no gesture
+            latest_prediction.update({
+                "gesture": None,
+                "action": None,
+                "confidence": 0,
+                "hand": None,
+                "timestamp": None
+            })
+        
+        system_state["accuracy"] = 0
+
+        if gesture_name:
+            system_state["status"] = "DETECTING"
+        else:
+           system_state["status"] = "NONE"
+        # =====================================================
+        # FPS & LATENCY TRACKING
+        # =====================================================
+
+        fps_counter += 1
+
+        if time.time() - fps_timer >= 1:
+            system_state["fps"] = fps_counter
+            fps_counter = 0
+            fps_timer = time.time()
+
+        system_state["latency"] = int((time.time() - start_time) * 1000)
+
+        # =====================================================
+        # OPTIONAL DISPLAY
+        # =====================================================
 
         if show_window:
-            cv2.imshow("GestureOS", frame)
+            if gesture_name:
+                cv2.putText(
+                    frame,
+                    f"{gesture_name} ({confidence:.2f})",
+                    (10, 50),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 255, 0),
+                    2
+                )
+            # cv2.imshow("GestureOS", frame)
 
-        if cv2.waitKey(1) & 0xFF == 27:
-            break
-
-
-
-
+            if cv2.waitKey(1) & 0xFF == 27:
+                break
 
     tracker.release()
     cv2.destroyAllWindows()
+def stop_engine():
+    global _engine_running
+    _engine_running = False
+    system_state["status"] = "STANDBY"
+    system_state["camera"] = "DISCONNECTED"
 
+
+
+
+# ============================================================
+# SAFE CLI RUN (Optional)
+# ============================================================
 
 if __name__ == "__main__":
+    start_engine(show_window=True)
+import json
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "--background",
-        action="store_true",
-        help="Run GestureOS in background mode"
-    )
-
-    args = parser.parse_args()
-
-    main(show_window=not args.background)
+def load_gesture_map():
+    try:
+        with open("gesture_action_map.json", "r") as f:
+            return json.load(f)
+    except:
+        return {}

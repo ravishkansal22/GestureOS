@@ -28,9 +28,5 @@
     },
     "THUMBS_UP": {
         "action": "volume_down"
-    },
-    "PINKY_FINGER": {
-        "type": "system",
-        "value": "None"
     }
 }

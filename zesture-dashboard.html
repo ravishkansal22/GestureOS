@@ -275,9 +275,6 @@
   .camera-feed-wrapper {
     padding: 14px 14px 0;
   }
-  video{
-    transform: scaleX(-1);
-  }
   .camera-feed {
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -756,6 +753,271 @@
   }
 
   .cg-del:hover { background: rgba(255,51,85,0.1); }
+
+  /* GESTURE LIBRARY TWO-COLUMN */
+  .gesture-library-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* GESTURE CARD BOXES */
+  .gesture-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .gesture-card {
+    background: var(--bg3);
+    border: 1px solid rgba(0,255,136,0.18);
+    border-radius: 6px;
+    padding: 14px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .gesture-card:hover {
+    border-color: rgba(0,255,136,0.4);
+    background: rgba(0,255,136,0.04);
+    box-shadow: 0 0 14px rgba(0,255,136,0.08);
+  }
+
+  .gesture-card-icon {
+    font-size: 22px;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .gesture-card-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+
+  .gesture-card-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    line-height: 1.4;
+    flex: 1;
+  }
+
+  .gesture-card-action-btn {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid rgba(0,255,136,0.4);
+    background: rgba(0,255,204,0.08);
+    color: var(--neon2);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 3px;
+    text-align: left;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .gesture-card-action-btn:hover {
+    background: rgba(0,255,136,0.15);
+    border-color: var(--neon);
+    box-shadow: 0 0 8px rgba(0,255,136,0.2);
+  }
+
+  .gesture-card-action-btn .btn-arrow {
+    font-size: 8px;
+    opacity: 0.6;
+  }
+
+  .gesture-lock {
+    position: absolute;
+    top: 8px; right: 8px;
+    font-size: 9px;
+    color: rgba(0,255,136,0.3);
+  }
+
+  /* TASK SWITCHER MODAL */
+  .task-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .task-modal-overlay.open { display: flex; }
+
+  .task-modal {
+    background: var(--bg2);
+    border: 1px solid var(--neon-border);
+    border-radius: 6px;
+    width: 380px;
+    max-width: 90vw;
+    box-shadow: 0 0 40px rgba(0,255,136,0.2);
+    overflow: hidden;
+  }
+
+  .task-modal-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--neon-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,255,136,0.04);
+  }
+
+  .task-modal-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--neon);
+    text-transform: uppercase;
+  }
+
+  .task-modal-close {
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+
+  .task-modal-close:hover { color: var(--red); background: rgba(255,51,85,0.1); }
+
+  .task-modal-body { padding: 14px 16px; }
+
+  .task-modal-gesture-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .task-modal-gesture-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0,255,136,0.12);
+  }
+
+  .task-modal-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    margin-bottom: 8px;
+  }
+
+  .task-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--bg3);
+    border: 1px solid rgba(0,255,136,0.12);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+  }
+
+  .task-item:hover {
+    border-color: rgba(0,255,136,0.4);
+    background: rgba(0,255,136,0.06);
+    color: var(--neon);
+  }
+
+  .task-item.active {
+    border-color: var(--neon);
+    background: rgba(0,255,136,0.1);
+    color: var(--neon);
+  }
+
+  .task-item .task-radio {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,255,136,0.4);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .task-item.active .task-radio {
+    border-color: var(--neon);
+    background: var(--neon);
+    box-shadow: 0 0 6px var(--neon);
+  }
+
+  .task-item .task-radio::after {
+    content: '';
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--bg);
+  }
+
+  .task-item:not(.active) .task-radio::after { display: none; }
+
+  .task-item-name { flex: 1; }
+  .task-item-tag {
+    font-size: 9px;
+    padding: 2px 6px;
+    border: 1px solid rgba(0,255,136,0.2);
+    border-radius: 2px;
+    color: var(--text-dim);
+    background: rgba(0,255,136,0.04);
+  }
+
+  /* RETRAIN LAYOUT */
+  .retrain-top-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: start;
+  }
+  .hidden {
+    display: none !important;
+  }
+
+  .retrain-camera-feed {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid var(--neon-border);
+    box-shadow: 0 0 20px rgba(0,255,136,0.1);
+  }
+
+  .retrain-camera-feed::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.015) 2px, rgba(0,255,136,0.015) 4px);
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -860,10 +1122,17 @@
                   <div style="font-size:40px;margin-bottom:8px;opacity:0.4;">◉</div>
                   <div class="cam-status">AWAITING CAMERA STREAM</div>
                   <div class="cam-sub" style="margin:6px 0 12px;">Connect your webcam to begin gesture detection</div>
-                  <button class="cam-btn" onclick="startCamera()">▶ ACTIVATE CAMERA</button>
+                  <div class="camera-overlay" id="dashboardCamOverlay">
+                       <h3>AWAITING CAMERA STREAM</h3>
+                       <button class="cam-btn" onclick="activateCamera()">
+                          ▶ ACTIVATE CAMERA
+                       </button>
+                      </div>
                 </div>
               </div>
-              <video id="cameraVideo" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:20px;"></video>
+              <img src="http://127.0.0.1:8000/video"
+     style="width:100%;height:100%;object-fit:cover;border-radius:20px;">
+
             </div><!-- end camera-feed -->
           </div><!-- end camera-feed-wrapper -->
           <div class="cam-stats">
@@ -880,19 +1149,19 @@
           <!-- Stats Grid -->
           <div class="stats-grid" style="grid-template-columns:1fr 1fr;">
             <div class="stat-card">
-              <div class="stat-val">9</div>
+              <div class="stat-value" id="totalGesturesVal">0</div>
               <div class="stat-label">Total Gestures</div>
             </div>
             <div class="stat-card">
-              <div class="stat-val">2</div>
+              <div class="stat-value" id="customGesturesVal">0</div>
               <div class="stat-label">Custom Gestures</div>
             </div>
             <div class="stat-card">
-              <div class="stat-val">97%</div>
+              <div class="stat-value" id="accuracyVal">0%</div>
               <div class="stat-label">Accuracy</div>
             </div>
             <div class="stat-card">
-              <div class="stat-val">12ms</div>
+              <div class="stat-value" id="latencyVal">0ms</div>
               <div class="stat-label">Latency</div>
             </div>
           </div>
@@ -921,11 +1190,31 @@
             </div>
             <div class="panel-body">
               <div style="font-family:'Share Tech Mono',monospace;">
-                <div class="ov-row"><span class="ov-key">Gesture</span><span class="ov-val" style="font-size:14px;">Index Point</span></div>
-                <div class="ov-row"><span class="ov-key">Action</span><span class="ov-val">CURSOR_MOVE</span></div>
-                <div class="ov-row"><span class="ov-key">Hand</span><span class="ov-val">RIGHT</span></div>
-                <div class="ov-row"><span class="ov-key">Confidence</span><span class="ov-val ok">98.2%</span></div>
-                <div class="ov-row"><span class="ov-key">Timestamp</span><span class="ov-val" id="lastGestureTime">--:--:--</span></div>
+                <div class="ov-row">
+  <span class="ov-key">Gesture</span>
+  <span class="ov-val" id="lastGesture" style="font-size:14px;">-</span>
+</div>
+
+<div class="ov-row">
+  <span class="ov-key">Action</span>
+  <span class="ov-val" id="lastAction">-</span>
+</div>
+
+<div class="ov-row">
+  <span class="ov-key">Hand</span>
+  <span class="ov-val" id="lastHand">-</span>
+</div>
+
+<div class="ov-row">
+  <span class="ov-key">Confidence</span>
+  <span class="ov-val ok" id="lastConfidence">-</span>
+</div>
+
+<div class="ov-row">
+  <span class="ov-key">Timestamp</span>
+  <span class="ov-val" id="lastTimestamp">--:--:--</span>
+</div>
+
               </div>
             </div>
           </div>
@@ -935,251 +1224,351 @@
     </div>
 
     <!-- OVERVIEW PAGE -->
-    <div class="page" id="page-overview">
-      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">
-        <div class="stat-card">
-          <div class="stat-val">9</div>
-          <div class="stat-label">Total Gestures</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val">97.3%</div>
-          <div class="stat-label">Model Accuracy</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val">30fps</div>
-          <div class="stat-label">Detection Rate</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val">v2.4.1</div>
-          <div class="stat-label">Model Version</div>
-        </div>
-      </div>
+    <!-- OVERVIEW PAGE -->
+<div class="page" id="page-overview">
+  <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">
+
+    <div class="stat-card">
+      <div class="stat-number" id="ovTotalGestures">0</div>
+      <div class="stat-label">Total Gestures</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-number">97.3%</div>
+      <div class="stat-label">Model Accuracy</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-val" id="ovFPS">30fps</div>
+      <div class="stat-label">Detection Rate</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-val" id="ovModelVersion">v2.4.1</div>
+      <div class="stat-label">Model Version</div>
+    </div>
+
+  </div>
+
 
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title"><span class="panel-title-icon">◈</span> SYSTEM OVERVIEW</div>
         </div>
         <div class="panel-body">
-          <div class="ov-row"><span class="ov-key">System Status</span><span class="ov-val ok">● ONLINE</span></div>
-          <div class="ov-row"><span class="ov-key">Camera Connection</span><span class="ov-val ok">CONNECTED</span></div>
-          <div class="ov-row"><span class="ov-key">Active Model</span><span class="ov-val">Zesture CNN v2.4.1</span></div>
-          <div class="ov-row"><span class="ov-key">Right Hand Controls</span><span class="ov-val">5 (Mouse)</span></div>
-          <div class="ov-row"><span class="ov-key">Left Hand Controls</span><span class="ov-val">4 (Navigation)</span></div>
-          <div class="ov-row"><span class="ov-key">Custom Gestures</span><span class="ov-val">2 Loaded</span></div>
-          <div class="ov-row"><span class="ov-key">CPU Usage</span><span class="ov-val warn">42%</span></div>
-          <div class="ov-row"><span class="ov-key">Memory</span><span class="ov-val">1.2 GB</span></div>
-          <div class="ov-row"><span class="ov-key">Uptime</span><span class="ov-val">04:23:11</span></div>
-          <div class="ov-row"><span class="ov-key">Last Retrain</span><span class="ov-val">2 hours ago</span></div>
-        </div>
+
+  <div class="ov-row">
+    <span class="ov-key">System Status</span>
+    <span class="ov-val ok" id="ovSystemStatus">● ONLINE</span>
+  </div>
+
+  <div class="ov-row">
+    <span class="ov-key">Camera Connection</span>
+    <span class="ov-val ok" id="ovCameraStatus">CONNECTED</span>
+  </div>
+
+  <div class="ov-row">
+    <span class="ov-key">Active Model</span>
+    <span class="ov-val" id="ovActiveModel">Zesture CNN v2.4.1</span>
+  </div>
+
+  <div class="ov-row">
+    <span class="ov-key">Right Hand Controls</span>
+    <span class="ov-val" id="ovRightControls">5 (Mouse)</span>
+  </div>
+
+  <div class="ov-row">
+    <span class="ov-key">Left Hand Controls</span>
+    <span class="ov-val" id="ovLeftControls">4 (Navigation)</span>
+  </div>
+
+  <div class="ov-row">
+    <span class="ov-key">Custom Gestures</span>
+    <span class="ov-val" id="ovCustomGestures">2 Loaded</span>
+  </div>
+
+  <div class="ov-row">
+    <span class="ov-key">CPU Usage</span>
+    <span class="ov-val warn" id="ovCPUUsage">42%</span>
+  </div>
+
+  <div class="ov-row">
+    <span class="ov-key">Memory</span>
+    <span class="ov-val" id="ovMemory">1.2 GB</span>
+  </div>
+
+  <div class="ov-row">
+    <span class="ov-key">Uptime</span>
+    <span class="ov-val" id="ovUptime">04:23:11</span>
+  </div>
+
+  <div class="ov-row">
+    <span class="ov-key">Last Retrain</span>
+    <span class="ov-val" id="ovLastRetrain">2 hours ago</span>
+  </div>
+
+</div>
+
       </div>
     </div>
 
     <!-- GESTURE LIBRARY PAGE -->
     <div class="page" id="page-gestures">
+      <div class="gesture-library-grid">
 
-      <!-- RIGHT HAND: Mouse Controls -->
-      <div class="panel" style="margin-bottom:14px;">
-        <div class="panel-header">
-          <div class="panel-title"><span class="panel-title-icon">✦</span> MOUSE CONTROLS</div>
-          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);">RIGHT HAND · FIXED</span>
-        </div>
-        <div class="panel-body">
-          <div class="hand-label">
-            <span>✋</span> RIGHT HAND
-            <span class="hand-badge">🔒 PERMANENT · 5 GESTURES</span>
+        <!-- LEFT: Permanent Controls (Left Hand) -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><span class="panel-title-icon">🤚</span> PERMANENT CONTROLS</div>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);">LEFT HAND · FIXED</span>
           </div>
-          <div class="gesture-list">
-            <div class="gesture-row">
-              <div class="gesture-info">
-                <div class="gesture-name">Right Click</div>
-                <div class="gesture-desc">Pinky finger move in direction</div>
-              </div>
-              <div>
-                <div class="gesture-action">MOUSE RIGHT</div>
-              </div>
-              <span class="lock-icon">🔒</span>
-            </div>
-            <div class="gesture-row">
-              <div class="gesture-info">
-                <div class="gesture-name">Left Click</div>
-                <div class="gesture-desc">Index + Middle finger tap in</div>
-              </div>
-              <div>
-                <div class="gesture-action">MOUSE LEFT</div>
-              </div>
-              <span class="lock-icon">🔒</span>
-            </div>
-            <div class="gesture-row">
-              <div class="gesture-info">
-                <div class="gesture-name">Scroll</div>
-                <div class="gesture-desc">Index + Middle fingers move in scroll direction</div>
-              </div>
-              <div>
-                <div class="gesture-action">SCROLL</div>
-              </div>
-              <span class="lock-icon">🔒</span>
-            </div>
-            <div class="gesture-row">
-              <div class="gesture-info">
-                <div class="gesture-name">Drag</div>
-                <div class="gesture-desc">Pinch (thumb + index), hold and drag in desired direction</div>
-              </div>
-              <div>
-                <div class="gesture-action">DRAG</div>
-              </div>
-              <span class="lock-icon">🔒</span>
-            </div>
-            <div class="gesture-row">
-              <div class="gesture-info">
-                <div class="gesture-name">Cursor Control</div>
-                <div class="gesture-desc">Use index finger to move and guide the cursor</div>
-              </div>
-              <div>
-                <div class="gesture-action">CURSOR</div>
-              </div>
-              <span class="lock-icon">🔒</span>
-            </div>
-          </div>
-        </div>
-      </div>
+          <div class="panel-body">
+            <div class="hand-label" style="margin-bottom:12px;">
+              <span>🤚</span> LEFT HAND
+              <span class="hand-badge">
+              🔒 PERMANENT · <span id="leftGestureCount">4</span> GESTURES
+              </span>
 
-      <!-- LEFT HAND: Permanent Controls -->
-      <div class="panel" style="margin-bottom:14px;">
-        <div class="panel-header">
-          <div class="panel-title"><span class="panel-title-icon">✦</span> PERMANENT CONTROLS</div>
-          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);">LEFT HAND · FIXED</span>
-        </div>
-        <div class="panel-body">
-          <div class="hand-label">
-            <span>🤚</span> LEFT HAND
-            <span class="hand-badge">🔒 PERMANENT · 4 GESTURES</span>
-          </div>
-          <div class="gesture-list">
-            <div class="gesture-row">
-              <div class="gesture-info">
-                <div class="gesture-name">Swipe Up</div>
-                <div class="gesture-desc">Pinky finger move upward</div>
-              </div>
-              <div><div class="gesture-action">SWIPE UP</div></div>
-              <span class="lock-icon">🔒</span>
             </div>
-            <div class="gesture-row">
-              <div class="gesture-info">
-                <div class="gesture-name">Swipe Down</div>
-                <div class="gesture-desc">Pinky finger move downward</div>
-              </div>
-              <div><div class="gesture-action">SWIPE DOWN</div></div>
-              <span class="lock-icon">🔒</span>
-            </div>
-            <div class="gesture-row">
-              <div class="gesture-info">
-                <div class="gesture-name">Swipe Left</div>
-                <div class="gesture-desc">Pinky finger move to the left</div>
-              </div>
-              <div><div class="gesture-action">SWIPE LEFT</div></div>
-              <span class="lock-icon">🔒</span>
-            </div>
-            <div class="gesture-row">
-              <div class="gesture-info">
-                <div class="gesture-name">Swipe Right</div>
-                <div class="gesture-desc">Pinky finger move to the right</div>
-              </div>
-              <div><div class="gesture-action">SWIPE RIGHT</div></div>
-              <span class="lock-icon">🔒</span>
-            </div>
-          </div>
-        </div>
-      </div>
+            <div class="gesture-cards-grid">
 
-      <!-- Custom Gestures -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title"><span class="panel-title-icon">✦</span> CUSTOM GESTURES</div>
-          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--neon);">EDITABLE</span>
-        </div>
-        <div class="panel-body">
-          <div class="add-gesture-form">
-            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:10px;text-transform:uppercase;">▸ Add New Gesture</div>
-            <div class="form-row">
-              <input class="form-input" placeholder="Gesture name..." id="gestureName">
-              <input class="form-input" placeholder="Assigned action..." id="gestureAction">
-              <button class="form-btn" onclick="addGesture()">+ ADD</button>
+              <div class="gesture-card">
+                <span class="gesture-lock">🔒</span>
+                <div class="gesture-card-icon">☝️</div>
+                <div class="gesture-card-name">Swipe Up</div>
+                <div class="gesture-card-desc">Pinky finger move upward</div>
+                <button class="gesture-card-action-btn" onclick="openTaskModal('Swipe Up','Pinky finger move upward','swipeup')">
+                  <span id="label-swipeup">SCROLL UP / PREV TAB</span>
+                  <span class="btn-arrow">▼</span>
+                </button>
+              </div>
+
+              <div class="gesture-card">
+                <span class="gesture-lock">🔒</span>
+                <div class="gesture-card-icon">👇</div>
+                <div class="gesture-card-name">Swipe Down</div>
+                <div class="gesture-card-desc">Pinky finger move downward</div>
+                <button class="gesture-card-action-btn" onclick="openTaskModal('Swipe Down','Pinky finger move downward','swipedown')">
+                  <span id="label-swipedown">SCROLL DOWN / NEXT TAB</span>
+                  <span class="btn-arrow">▼</span>
+                </button>
+              </div>
+
+              <div class="gesture-card">
+                <span class="gesture-lock">🔒</span>
+                <div class="gesture-card-icon">👈</div>
+                <div class="gesture-card-name">Swipe Left</div>
+                <div class="gesture-card-desc">Pinky finger move to the left</div>
+                <button class="gesture-card-action-btn" onclick="openTaskModal('Swipe Left','Pinky finger move to the left','swipeleft')">
+                  <span id="label-swipeleft">NAVIGATE BACK</span>
+                  <span class="btn-arrow">▼</span>
+                </button>
+              </div>
+
+              <div class="gesture-card">
+                <span class="gesture-lock">🔒</span>
+                <div class="gesture-card-icon">👉</div>
+                <div class="gesture-card-name">Swipe Right</div>
+                <div class="gesture-card-desc">Pinky finger move to the right</div>
+                <button class="gesture-card-action-btn" onclick="openTaskModal('Swipe Right','Pinky finger move to the right','swiperight')">
+                  <span id="label-swiperight">NAVIGATE FORWARD</span>
+                  <span class="btn-arrow">▼</span>
+                </button>
+              </div>
+
             </div>
           </div>
-          <div id="customGestureList">
-            <div class="custom-gesture-item">
-              <span class="cg-name">Peace Sign</span>
-              <span class="cg-action">SCREENSHOT</span>
-              <span class="cg-del" onclick="removeGesture(this)" title="Remove">✕</span>
+        </div>
+
+        <!-- RIGHT: Mouse Controls (Right Hand) -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><span class="panel-title-icon">✋</span> MOUSE CONTROLS</div>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);">RIGHT HAND · FIXED</span>
+          </div>
+          <div class="panel-body">
+            <div class="hand-label" style="margin-bottom:12px;">
+              <span>✋</span> RIGHT HAND
+            <span class="hand-badge">
+            🔒 PERMANENT · <span id="rightGestureCount">5</span> GESTURES
+          </span>
             </div>
-            <div class="custom-gesture-item">
-              <span class="cg-name">Thumbs Up</span>
-              <span class="cg-action">VOLUME UP</span>
-              <span class="cg-del" onclick="removeGesture(this)" title="Remove">✕</span>
+            <div class="gesture-cards-grid">
+
+              <div class="gesture-card">
+                <span class="gesture-lock">🔒</span>
+                <div class="gesture-card-icon">🖱️</div>
+                <div class="gesture-card-name">Right Click</div>
+                <div class="gesture-card-desc">Pinky finger move in direction</div>
+                <button class="gesture-card-action-btn" onclick="openTaskModal('Right Click','Pinky finger move in direction','rightclick')">
+                  <span id="label-rightclick">MOUSE RIGHT CLICK</span>
+                  <span class="btn-arrow">▼</span>
+                </button>
+              </div>
+
+              <div class="gesture-card">
+                <span class="gesture-lock">🔒</span>
+                <div class="gesture-card-icon">👆</div>
+                <div class="gesture-card-name">Left Click</div>
+                <div class="gesture-card-desc">Index + Middle finger tap in</div>
+                <button class="gesture-card-action-btn" onclick="openTaskModal('Left Click','Index + Middle finger tap in','leftclick')">
+                  <span id="label-leftclick">MOUSE LEFT CLICK</span>
+                  <span class="btn-arrow">▼</span>
+                </button>
+              </div>
+
+              <div class="gesture-card">
+                <span class="gesture-lock">🔒</span>
+                <div class="gesture-card-icon">🔄</div>
+                <div class="gesture-card-name">Scroll</div>
+                <div class="gesture-card-desc">Index + Middle fingers move in scroll direction</div>
+                <button class="gesture-card-action-btn" onclick="openTaskModal('Scroll','Index + Middle fingers in scroll direction','scroll')">
+                  <span id="label-scroll">SCROLL PAGE</span>
+                  <span class="btn-arrow">▼</span>
+                </button>
+              </div>
+
+              <div class="gesture-card">
+                <span class="gesture-lock">🔒</span>
+                <div class="gesture-card-icon">✊</div>
+                <div class="gesture-card-name">Drag</div>
+                <div class="gesture-card-desc">Pinch (thumb + index), hold and drag</div>
+                <button class="gesture-card-action-btn" onclick="openTaskModal('Drag','Pinch thumb + index, hold and drag','drag')">
+                  <span id="label-drag">MOUSE DRAG</span>
+                  <span class="btn-arrow">▼</span>
+                </button>
+              </div>
+
+              <div class="gesture-card" style="grid-column:1/-1;">
+                <span class="gesture-lock">🔒</span>
+                <div class="gesture-card-icon">☝️</div>
+                <div class="gesture-card-name">Cursor Control</div>
+                <div class="gesture-card-desc">Use index finger to move and guide the cursor across the screen</div>
+                <button class="gesture-card-action-btn" onclick="openTaskModal('Cursor Control','Use index finger to move cursor','cursor')">
+                  <span id="label-cursor">CURSOR MOVE</span>
+                  <span class="btn-arrow">▼</span>
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
+
       </div>
     </div>
 
     <!-- MAPPINGS PAGE -->
-    <div class="page" id="page-mappings">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title"><span class="panel-title-icon">⇌</span> GESTURE ACTION MAPPINGS</div>
-        </div>
-        <div class="panel-body">
-          <table class="mapping-table">
-            <thead>
-              <tr>
-                <th>GESTURE</th>
-                <th>HAND</th>
-                <th>TRIGGER</th>
-                <th>ACTION</th>
-                <th>STATUS</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Right Click</td><td>Right</td><td>Pinky tap in</td><td>MOUSE_RIGHT_CLICK</td><td>🔒 Fixed</td></tr>
-              <tr><td>Left Click</td><td>Right</td><td>Index+Middle tap</td><td>MOUSE_LEFT_CLICK</td><td>🔒 Fixed</td></tr>
-              <tr><td>Scroll</td><td>Right</td><td>Index+Middle swipe</td><td>SCROLL</td><td>🔒 Fixed</td></tr>
-              <tr><td>Drag</td><td>Right</td><td>Thumb+Index pinch</td><td>MOUSE_DRAG</td><td>🔒 Fixed</td></tr>
-              <tr><td>Cursor Control</td><td>Right</td><td>Index point</td><td>CURSOR_MOVE</td><td>🔒 Fixed</td></tr>
-              <tr><td>Swipe Up</td><td>Left</td><td>Pinky up</td><td>SCROLL_UP / PREV TAB</td><td>🔒 Fixed</td></tr>
-              <tr><td>Swipe Down</td><td>Left</td><td>Pinky down</td><td>SCROLL_DOWN / NEXT TAB</td><td>🔒 Fixed</td></tr>
-              <tr><td>Swipe Left</td><td>Left</td><td>Pinky left</td><td>NAV_BACK</td><td>🔒 Fixed</td></tr>
-              <tr><td>Swipe Right</td><td>Left</td><td>Pinky right</td><td>NAV_FORWARD</td><td>🔒 Fixed</td></tr>
-              <tr><td>Peace Sign</td><td>Either</td><td>Custom</td><td>SCREENSHOT</td><td>✎ Custom</td></tr>
-              <tr><td>Thumbs Up</td><td>Either</td><td>Custom</td><td>VOLUME_UP</td><td>✎ Custom</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+<div class="panel-body">
+  <table class="mappings-table">
+    <thead>
+      <tr>
+        <th>Gesture</th>
+        <th>Hand</th>
+        <th>Trigger</th>
+        <th>Action</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="mappingsTableBody"></tbody>
+  </table>
+</div>
+
 
     <!-- RETRAIN PAGE -->
     <div class="page" id="page-retrain">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title"><span class="panel-title-icon">⟳</span> MODEL RETRAINING</div>
+
+      <!-- TOP: Camera Feed + Retrain Controls side by side -->
+      <div class="retrain-top-grid">
+
+        <!-- LEFT: Retrain Controls -->
+        <div>
+          <div class="panel" style="margin-bottom:14px;">
+            <div class="panel-header">
+              <div class="panel-title"><span class="panel-title-icon">⟳</span> MODEL RETRAINING</div>
+            </div>
+            <div class="panel-body">
+              <div style="margin-bottom:14px;font-size:12px;color:var(--text-dim);line-height:1.6;font-family:'Share Tech Mono',monospace;">
+                Trigger a full model retrain to incorporate new or modified gestures. This process runs automatically with no manual configuration required.
+              </div>
+              <button class="retrain-btn" onclick="triggerRetrain()">
+                <span>⟳</span> INITIATE ONE-CLICK RETRAIN
+              </button>
+              <div class="progress-bar">
+                <div class="progress-fill" id="retrainProgress" style="width:0%;transition:width 0.5s;"></div>
+              </div>
+              <div class="retrain-status" id="retrainLog">
+                <div class="retrain-log-line"><span class="retrain-log-time">[--:--:--]</span><span class="retrain-log-msg">Awaiting retrain trigger...</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Gestures (moved here) -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><span class="panel-title-icon">✦</span> CUSTOM GESTURES</div>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--neon);">EDITABLE</span>
+            </div>
+            <div class="panel-body">
+              <div class="add-gesture-form">
+                <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:10px;text-transform:uppercase;">▸ Add New Gesture</div>
+                <div class="form-row">
+                  <input class="form-input" placeholder="Gesture name..." id="gestureName">
+                  <input class="form-input" placeholder="Assigned action..." id="gestureAction">
+                  <button class="form-btn" onclick="addGesture()">+ ADD</button>
+                </div>
+              </div>
+              <div id="customGestureList">
+                <div class="custom-gesture-item">
+                  <span class="cg-name">Peace Sign</span>
+                  <span class="cg-action">SCREENSHOT</span>
+                  <span class="cg-del" onclick="removeGesture(this)" title="Remove">✕</span>
+                </div>
+                <div class="custom-gesture-item">
+                  <span class="cg-name">Thumbs Up</span>
+                  <span class="cg-action">VOLUME UP</span>
+                  <span class="cg-del" onclick="removeGesture(this)" title="Remove">✕</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="panel-body">
-          <div style="margin-bottom:14px;font-size:12px;color:var(--text-dim);line-height:1.6;font-family:'Share Tech Mono',monospace;">
-            Trigger a full model retrain to incorporate new or modified gestures. This process runs automatically with no manual configuration required.
+
+        <!-- RIGHT: Live Camera Feed for Retrain -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><span class="panel-title-icon">◉</span> LIVE CAMERA FEED</div>
+            <span class="badge">● REC</span>
           </div>
-          <button class="retrain-btn" onclick="triggerRetrain()">
-            <span>⟳</span> INITIATE ONE-CLICK RETRAIN
-          </button>
-          <div class="progress-bar">
-            <div class="progress-fill" id="retrainProgress" style="width:0%;transition:width 0.5s;"></div>
+          <div style="padding:14px 14px 0;">
+            <div class="retrain-camera-feed">
+              <div class="camera-overlay" id="retrainCamOverlay">
+                <div class="cam-corners">
+                  <div class="corner tl"></div><div class="corner tr"></div>
+                  <div class="corner bl"></div><div class="corner br"></div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="font-size:28px;margin-bottom:8px;opacity:0.4;">◉</div>
+                  <div class="cam-status" style="font-size:10px;">AWAITING CAMERA STREAM</div>
+                  <div class="cam-sub" style="margin:6px 0 10px;font-size:9px;">Activate camera to monitor gesture recording</div>
+                  <button class="cam-btn" onclick="startRetrainCamera()">▶ ACTIVATE CAMERA</button>
+                </div>
+              </div>
+              <img src="http://127.0.0.1:8000/video"
+     style="width:100%;height:100%;object-fit:cover;border-radius:20px;">
+
+            </div>
           </div>
-          <div class="retrain-status" id="retrainLog">
-            <div class="retrain-log-line"><span class="retrain-log-time">[--:--:--]</span><span class="retrain-log-msg">Awaiting retrain trigger...</span></div>
+          <div class="cam-stats">
+            <div class="cam-stat"><span class="cam-stat-label">FPS</span><span class="cam-stat-val">30</span></div>
+            <div class="cam-stat"><span class="cam-stat-label">LATENCY</span><span class="cam-stat-val">12ms</span></div>
+            <div class="cam-stat"><span class="cam-stat-label">DETECT</span><span class="cam-stat-val" id="retrainDetectStatus">STANDBY</span></div>
           </div>
         </div>
+
       </div>
 
-      <div class="panel" style="margin-top:14px;">
+      <!-- Training History -->
+      <div class="panel">
         <div class="panel-header">
           <div class="panel-title"><span class="panel-title-icon">◈</span> TRAINING HISTORY</div>
         </div>
@@ -1196,12 +1585,31 @@
           </table>
         </div>
       </div>
+
     </div>
 
   </div>
 </div>
 
+<!-- TASK SWITCHER MODAL -->
+<div class="task-modal-overlay" id="taskModalOverlay" onclick="closeTaskModal(event)">
+  <div class="task-modal">
+    <div class="task-modal-header">
+      <span class="task-modal-title">▸ SWITCH TASK — <span id="modalGestureName"></span></span>
+      <span class="task-modal-close" onclick="closeTaskModalDirect()">✕</span>
+    </div>
+    <div class="task-modal-body">
+      <div class="task-modal-gesture-name" id="modalGestureNameFull"></div>
+      <div class="task-modal-gesture-desc" id="modalGestureDesc"></div>
+      <div class="task-modal-label">▸ SELECT OPERATION</div>
+      <div class="task-list" id="modalTaskList"></div>
+    </div>
+  </div>
+</div>
+
 <script>
+  const API = "http://127.0.0.1:8000";
+
   // PAGE NAVIGATION
   const pages = {
     'dashboard': ['DASHBOARD', 'Live Feed & Status'],
@@ -1227,21 +1635,123 @@
     document.getElementById('overviewFloat').classList.toggle('open');
   }
 
-  // CAMERA
-  function startCamera() {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        const video = document.getElementById('cameraVideo');
-        video.srcObject = stream;
-        video.play();
-        video.style.display = 'block';
-        document.querySelector('.camera-overlay').style.display = 'none';
-        document.getElementById('detectStatus').textContent = 'ACTIVE';
-      })
-      .catch(() => {
-        alert('Camera access denied or not available.');
-      });
+  // TASK MODAL DATA
+  const gestureTasks = {
+    swipeup:    { tasks: ['SCROLL UP / PREV TAB','VOLUME UP','BRIGHTNESS UP','WORKSPACE PREV','ZOOM IN','PAGE UP'] },
+    swipedown:  { tasks: ['SCROLL DOWN / NEXT TAB','VOLUME DOWN','BRIGHTNESS DOWN','WORKSPACE NEXT','ZOOM OUT','PAGE DOWN'] },
+    swipeleft:  { tasks: ['NAVIGATE BACK','PREV SLIDE','SWITCH TAB LEFT','UNDO','PREV TRACK'] },
+    swiperight: { tasks: ['NAVIGATE FORWARD','NEXT SLIDE','SWITCH TAB RIGHT','REDO','NEXT TRACK'] },
+    rightclick: { tasks: ['MOUSE RIGHT CLICK','CONTEXT MENU','ALT+F4','OPEN PROPERTIES'] },
+    leftclick:  { tasks: ['MOUSE LEFT CLICK','SELECT ALL','CONFIRM / ENTER','DOUBLE CLICK'] },
+    scroll:     { tasks: ['SCROLL PAGE','HORIZONTAL SCROLL','ZOOM SCROLL','TAB CYCLE'] },
+    drag:       { tasks: ['MOUSE DRAG','DRAG & DROP','RESIZE WINDOW','MOVE WINDOW'] },
+    cursor:     { tasks: ['CURSOR MOVE','POINTER PRECISION MODE','PEN/DRAW MODE','LASER POINTER'] },
+  };
+
+  // Active task per gesture
+  const activeTask = {};
+
+  function openTaskModal(name, desc, key) {
+    const data = gestureTasks[key];
+    if (!data) return;
+
+    document.getElementById('modalGestureName').textContent = name;
+    document.getElementById('modalGestureNameFull').textContent = name;
+    document.getElementById('modalGestureDesc').textContent = desc;
+
+    const currentTask = activeTask[key] || data.tasks[0];
+    const list = document.getElementById('modalTaskList');
+    list.innerHTML = '';
+
+    data.tasks.forEach(task => {
+      const isActive = task === currentTask;
+      const item = document.createElement('div');
+      item.className = 'task-item' + (isActive ? ' active' : '');
+      item.innerHTML = `
+        <div class="task-radio"></div>
+        <span class="task-item-name">${task}</span>
+        <span class="task-item-tag">${isActive ? 'ACTIVE' : 'ASSIGN'}</span>
+      `;
+      item.onclick = () => selectTask(key, task, name);
+      list.appendChild(item);
+    });
+
+    document.getElementById('taskModalOverlay').classList.add('open');
   }
+
+  function selectTask(key, task, name) {
+    activeTask[key] = task;
+    // Update the label on the gesture card button
+    const labelEl = document.getElementById('label-' + key);
+    if (labelEl) labelEl.textContent = task;
+    // Refresh modal to show new active
+    openTaskModal(name, document.getElementById('modalGestureDesc').textContent, key);
+  }
+
+  function closeTaskModal(event) {
+    if (event.target === document.getElementById('taskModalOverlay')) {
+      document.getElementById('taskModalOverlay').classList.remove('open');
+    }
+  }
+
+  function closeTaskModalDirect() {
+    document.getElementById('taskModalOverlay').classList.remove('open');
+  }
+  async function activateCamera() {
+  await fetch("http://127.0.0.1:8000/start", { method: "POST" });
+  document.getElementById("detectStatus").textContent = "ACTIVE";
+}
+
+async function activateCamera() {
+  await fetch("http://127.0.0.1:8000/start", { method: "POST" });
+
+  document.getElementById("detectStatus").textContent = "ACTIVE";
+
+  // Remove ALL overlays completely
+  document.querySelectorAll(".camera-overlay").forEach(el => {
+    el.remove();
+  });
+}
+ async function fetchMappings() {
+  try {
+    const res = await fetch("http://127.0.0.1:8000/mappings");
+    const data = await res.json();
+
+    console.log("Fetched mappings:", data);
+
+    const tbody = document.getElementById("mappingsTableBody");
+
+    if (!tbody) {
+      console.log("mappingsTableBody not found!");
+      return;
+    }
+
+    tbody.innerHTML = "";
+
+    data.forEach(item => {
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${item.gesture}</td>
+        <td>-</td>
+        <td>-</td>
+        <td>${item.action}</td>
+        <td>
+          ${item.status === "Fixed"
+            ? '<span style="color:#00ff99;">🔒 Fixed</span>'
+            : '<span style="color:#00e6ff;">✎ Custom</span>'}
+        </td>
+      `;
+
+      tbody.appendChild(row);
+    });
+
+  } catch (err) {
+    console.log("Error fetching mappings:", err);
+  }
+}
+
+
 
   // ADD GESTURE
   function addGesture() {
@@ -1304,6 +1814,168 @@
     const lg = document.getElementById('lastGestureTime');
     if (lg) lg.textContent = new Date().toLocaleTimeString();
   }, 1000);
+  // ============================
+// 🔥 BACKEND LIVE PREDICTION
+// ============================
+
+async function fetchPrediction() {
+  try {
+    const res = await fetch(API + "/prediction");
+    const data = await res.json();
+
+    if (!data.gesture) return;
+
+    document.getElementById("detectStatus").textContent = "ACTIVE";
+
+    const rows = document.querySelectorAll(".panel-body .ov-row");
+
+    if (rows.length >= 4) {
+      rows[0].querySelector(".ov-val").textContent = data.gesture;
+      rows[1].querySelector(".ov-val").textContent = data.action;
+      rows[2].querySelector(".ov-val").textContent = data.hand;
+      rows[3].querySelector(".ov-val").textContent =
+        data.confidence + "%";
+    }
+
+  } catch (err) {
+    console.log("Backend not reachable");
+  }
+}
+async function fetchAll() {
+  try {
+    const [statusRes, predictionRes] = await Promise.all([
+      fetch("http://127.0.0.1:8000/status"),
+      fetch("http://127.0.0.1:8000/prediction")
+    ]);
+
+    const status = await statusRes.json();
+    const prediction = await predictionRes.json();
+
+    // ===== GESTURE LIBRARY LINKING =====
+
+// Update gesture counts
+document.getElementById("leftGestureCount").textContent =
+  status.left_hand_gestures;
+
+document.getElementById("rightGestureCount").textContent =
+  status.right_hand_gestures;
+
+// Update gesture action labels dynamically
+const library = status.gesture_library;
+
+if (library) {
+  Object.keys(library).forEach(key => {
+    const el = document.getElementById("label-" + key);
+    if (el) {
+      el.textContent = library[key];
+    }
+  });
+}
+
+
+    // 🔹 TOP STATS
+    document.getElementById("totalGesturesVal").textContent =
+      status.total_gestures;
+
+    document.getElementById("accuracyVal").textContent =
+      status.accuracy + "%";
+
+    document.getElementById("latencyVal").textContent =
+      status.latency + "ms";
+
+    document.getElementById("customGesturesVal").textContent =
+      status.custom_gestures;
+    
+    document.getElementById("ovSystemStatus").textContent =
+      status.status;
+
+    document.getElementById("ovCameraStatus").textContent =
+      status.camera;
+
+    document.getElementById("ovCustomGestures").textContent =
+      status.custom_gestures + " Loaded";
+
+    document.getElementById("ovCPUUsage").textContent =
+      status.cpu_usage + "%";
+
+    document.getElementById("ovMemory").textContent =
+      status.memory;
+
+    document.getElementById("ovUptime").textContent =
+      status.uptime;
+    
+    // ===== OVERVIEW TOP CARDS =====
+document.getElementById("ovTotalGestures").textContent =
+  status.total_gestures;
+
+document.getElementById("ovAccuracy").textContent =
+  status.accuracy + "%";
+
+document.getElementById("ovFPS").textContent =
+  status.fps + "fps";
+
+document.getElementById("ovModelVersion").textContent =
+  "v2.4.1"; // or status.model_version if backend sends it
+
+
+    // 🔹 LAST DETECTED
+    if (prediction && prediction.gesture !== null) {
+      document.getElementById("lastGesture").textContent =
+        prediction.gesture;
+
+      document.getElementById("lastAction").textContent =
+        prediction.action;
+
+      document.getElementById("lastHand").textContent =
+        prediction.hand;
+
+      document.getElementById("lastConfidence").textContent =
+        prediction.confidence + "%";
+
+      document.getElementById("lastTimestamp").textContent =
+        new Date(prediction.timestamp * 1000).toLocaleTimeString();
+    }else {
+  // 🔥 CLEAR UI WHEN NO GESTURE
+  document.getElementById("lastGesture").textContent = "-";
+  document.getElementById("lastAction").textContent = "-";
+  document.getElementById("lastHand").textContent = "-";
+  document.getElementById("lastConfidence").textContent = "0%";
+  document.getElementById("lastTimestamp").textContent = "--:--:--";
+}
+
+  } catch (err) {
+    console.log("Sync error:", err);
+  }
+}
+
+setInterval(fetchAll, 300);
+
+async function loadSystemStatus() {
+  try {
+    const res = await fetch(API + "/status");
+    const data = await res.json();
+
+    const stats = document.querySelectorAll(".stat-val");
+
+    if (stats.length >= 4) {
+      stats[0].textContent = data.total_gestures;
+      stats[2].textContent = data.accuracy + "%";
+      stats[3].textContent = data.latency + "ms";
+    }
+
+  } catch (err) {
+    console.log("Status not reachable");
+  }
+}
+
+loadSystemStatus();
+
+document.addEventListener("DOMContentLoaded", () => {
+  fetchMappings();
+});
+
+setInterval(fetchPrediction, 300);
+fetchMappings();
 </script>
 </body>
 </html>
