@@ -7,20 +7,63 @@ import main
 import json
 import os
 
-app = FastAPI()   # ← THIS MUST EXIST AT TOP LEVEL
+# ============================================================
+# FASTAPI INITIALIZATION
+# ============================================================
+
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Start gesture engine in background
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
+
+def load_gesture_map():
+    """
+    Safely loads gesture_action_map.json
+    """
+    try:
+        with open("data/gesture_action_map.json", "r") as f:
+            return json.load(f)
+    except Exception as e:
+        print("Error loading gesture map:", e)
+        return {}
+
+# ============================================================
+# ENGINE CONTROL ROUTES
+# ============================================================
+
 @app.post("/start")
 def start():
+    """
+    Starts gesture engine in background thread
+    Prevents multiple instances
+    """
+    if main._engine_running:
+        return {"status": "Already running"}
+
     threading.Thread(target=main.start_engine, daemon=True).start()
     return {"status": "Camera started"}
+
+
+@app.post("/stop")
+def stop():
+    """
+    Stops gesture engine safely
+    """
+    main.stop_engine()
+    return {"status": "Engine stopped"}
+
+# ============================================================
+# VIDEO STREAM ROUTE
+# ============================================================
 
 def generate_frames():
     while True:
@@ -28,13 +71,14 @@ def generate_frames():
         if frame is None:
             continue
 
-        _, buffer = cv2.imencode('.jpg', frame)
+        _, buffer = cv2.imencode(".jpg", frame)
         frame_bytes = buffer.tobytes()
 
         yield (
-            b'--frame\r\n'
-            b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
         )
+
 
 @app.get("/video")
 def video_feed():
@@ -42,50 +86,30 @@ def video_feed():
         generate_frames(),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
-system_state = {
-    "status": "STANDBY",
-    "camera": "DISCONNECTED",
-    "total_gestures": 0,
-    "accuracy": 0,
-    "fps": 0,
-    "custom_gestures": 0
-}
 
+# ============================================================
+# STATUS ROUTES
+# ============================================================
 
 @app.get("/status")
 def get_status():
-    return {
-        "status": system_state["status"],
-        "camera": system_state["camera"],
-        "total_gestures": system_state["total_gestures"],
-        "accuracy": system_state["accuracy"],
-        "fps": system_state["fps"],
-        "custom_gestures": system_state["custom_gestures"],
+    """
+    Returns live system_state from main.py
+    """
+    return main.system_state
 
-        # 👇 NEW ADDITIONS
-        "left_hand_gestures": 4,
-        "right_hand_gestures": 5,
 
-        "gesture_library": {
-            "swipeup": "SCROLL UP / PREV TAB",
-            "swipedown": "SCROLL DOWN / NEXT TAB",
-            "swipeleft": "NAVIGATE BACK",
-            "swiperight": "NAVIGATE FORWARD",
-            "rightclick": "MOUSE RIGHT CLICK",
-            "leftclick": "MOUSE LEFT CLICK",
-            "scroll": "SCROLL PAGE",
-            "drag": "MOUSE DRAG",
-            "cursor": "CURSOR MOVE"
-        }
-    }
-def load_gesture_map():
-    try:
-        with open("data\gesture_action_map.json", "r") as f:
-            return json.load(f)
-    except Exception as e:
-        print("Error loading gesture map:", e)
-        return {}
-    
+@app.get("/prediction")
+def prediction():
+    """
+    Returns latest detected gesture info
+    """
+    return main.latest_prediction
+
+# ============================================================
+# GESTURE MAPPING ROUTES
+# ============================================================
+
 @app.get("/mappings")
 def get_mappings():
 
@@ -108,7 +132,6 @@ def get_mappings():
     for gesture, config in gesture_map.items():
 
         action = config.get("action", "N/A")
-
         status = "Fixed" if gesture in fixed_gestures else "Custom"
 
         response.append({
@@ -117,21 +140,24 @@ def get_mappings():
             "status": status
         })
 
-    print("FINAL RESPONSE:", response)  # 👈 debug
-
     return response
 
-
-@app.get("/prediction")
-def prediction():
-    return main.latest_prediction
-
+# ============================================================
+# RETRAIN PLACEHOLDER (No conflict change)
+# ============================================================
 
 @app.post("/retrain")
 def retrain():
+    """
+    Placeholder retrain endpoint
+    (We will wire this properly next)
+    """
     return {"message": "Retraining triggered"}
+
+# ============================================================
+# ROOT
+# ============================================================
 
 @app.get("/")
 def root():
     return {"message": "GestureOS Backend Running"}
-

@@ -189,7 +189,15 @@
     align-items: center;
     gap: 16px;
   }
+  .mapping-table td {
+  transition: all 0.2s ease;
+}
 
+.mapping-table tr:hover td {
+  background: rgba(0,255,136,0.08);
+  color: var(--neon);
+  text-shadow: 0 0 6px rgba(0,255,136,0.5);
+}
   .badge {
     padding: 3px 10px;
     border: 1px solid var(--neon-border);
@@ -309,7 +317,16 @@
     pointer-events: none;
     animation: scanline 8s linear infinite;
   }
+  .camera-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+  } 
 
+.camera-feed img {
+    position: relative;
+    z-index: 1;
+}
   @keyframes scanline {
     0% { background-position: 0 0; }
     100% { background-position: 0 200px; }
@@ -1111,27 +1128,31 @@
           </div>
           <div class="camera-feed-wrapper">
             <div class="camera-feed">
-              <div class="camera-overlay">
-                <div class="cam-corners">
-                  <div class="corner tl"></div>
-                  <div class="corner tr"></div>
-                  <div class="corner bl"></div>
-                  <div class="corner br"></div>
-                </div>
-                <div style="text-align:center;">
-                  <div style="font-size:40px;margin-bottom:8px;opacity:0.4;">◉</div>
-                  <div class="cam-status">AWAITING CAMERA STREAM</div>
-                  <div class="cam-sub" style="margin:6px 0 12px;">Connect your webcam to begin gesture detection</div>
-                  <div class="camera-overlay" id="dashboardCamOverlay">
-                       <h3>AWAITING CAMERA STREAM</h3>
-                       <button class="cam-btn" onclick="activateCamera()">
-                          ▶ ACTIVATE CAMERA
-                       </button>
-                      </div>
-                </div>
-              </div>
-              <img src="http://127.0.0.1:8000/video"
-     style="width:100%;height:100%;object-fit:cover;border-radius:20px;">
+                <div class="camera-overlay" id="dashboardCamOverlay">
+  <div class="cam-corners">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+  </div>
+
+  <div style="text-align:center;">
+    <div style="font-size:40px;margin-bottom:8px;opacity:0.4;">◉</div>
+    <div class="cam-status">AWAITING CAMERA STREAM</div>
+    <div class="cam-sub" style="margin:6px 0 12px;">
+      Connect your webcam to begin gesture detection
+    </div>
+    <button class="cam-btn" onclick="activateCamera()">
+      ▶ ACTIVATE CAMERA
+    </button>
+  </div>
+</div>
+
+              <img 
+  src="http://127.0.0.1:8000/video"
+  onload="document.getElementById('dashboardCamOverlay').style.display='none';"
+  style="width:100%;height:100%;object-fit:cover;border-radius:20px;"
+>
 
             </div><!-- end camera-feed -->
           </div><!-- end camera-feed-wrapper -->
@@ -1337,10 +1358,7 @@
                 <div class="gesture-card-icon">☝️</div>
                 <div class="gesture-card-name">Swipe Up</div>
                 <div class="gesture-card-desc">Pinky finger move upward</div>
-                <button class="gesture-card-action-btn" onclick="openTaskModal('Swipe Up','Pinky finger move upward','swipeup')">
-                  <span id="label-swipeup">SCROLL UP / PREV TAB</span>
-                  <span class="btn-arrow">▼</span>
-                </button>
+                <div class="gesture-action">OPEN CHATGPT</div>
               </div>
 
               <div class="gesture-card">
@@ -1348,10 +1366,7 @@
                 <div class="gesture-card-icon">👇</div>
                 <div class="gesture-card-name">Swipe Down</div>
                 <div class="gesture-card-desc">Pinky finger move downward</div>
-                <button class="gesture-card-action-btn" onclick="openTaskModal('Swipe Down','Pinky finger move downward','swipedown')">
-                  <span id="label-swipedown">SCROLL DOWN / NEXT TAB</span>
-                  <span class="btn-arrow">▼</span>
-                </button>
+                <div class="gesture-action">TAKE SCREENSHOT</div>
               </div>
 
               <div class="gesture-card">
@@ -1359,10 +1374,7 @@
                 <div class="gesture-card-icon">👈</div>
                 <div class="gesture-card-name">Swipe Left</div>
                 <div class="gesture-card-desc">Pinky finger move to the left</div>
-                <button class="gesture-card-action-btn" onclick="openTaskModal('Swipe Left','Pinky finger move to the left','swipeleft')">
-                  <span id="label-swipeleft">NAVIGATE BACK</span>
-                  <span class="btn-arrow">▼</span>
-                </button>
+                <div class="gesture-action">SWITCH APP</div>
               </div>
 
               <div class="gesture-card">
@@ -1370,10 +1382,7 @@
                 <div class="gesture-card-icon">👉</div>
                 <div class="gesture-card-name">Swipe Right</div>
                 <div class="gesture-card-desc">Pinky finger move to the right</div>
-                <button class="gesture-card-action-btn" onclick="openTaskModal('Swipe Right','Pinky finger move to the right','swiperight')">
-                  <span id="label-swiperight">NAVIGATE FORWARD</span>
-                  <span class="btn-arrow">▼</span>
-                </button>
+                <div class="gesture-action">CLOSE APP</div>
               </div>
 
             </div>
@@ -1399,22 +1408,16 @@
                 <span class="gesture-lock">🔒</span>
                 <div class="gesture-card-icon">🖱️</div>
                 <div class="gesture-card-name">Right Click</div>
-                <div class="gesture-card-desc">Pinky finger move in direction</div>
-                <button class="gesture-card-action-btn" onclick="openTaskModal('Right Click','Pinky finger move in direction','rightclick')">
-                  <span id="label-rightclick">MOUSE RIGHT CLICK</span>
-                  <span class="btn-arrow">▼</span>
-                </button>
+                <div class="gesture-card-desc">Index + Middle finger tap in</div>
+                <div class="gesture-action">MOUSE RIGHT CLICK</div>
               </div>
 
               <div class="gesture-card">
                 <span class="gesture-lock">🔒</span>
                 <div class="gesture-card-icon">👆</div>
                 <div class="gesture-card-name">Left Click</div>
-                <div class="gesture-card-desc">Index + Middle finger tap in</div>
-                <button class="gesture-card-action-btn" onclick="openTaskModal('Left Click','Index + Middle finger tap in','leftclick')">
-                  <span id="label-leftclick">MOUSE LEFT CLICK</span>
-                  <span class="btn-arrow">▼</span>
-                </button>
+                <div class="gesture-card-desc">Thumb + Index finger tap in</div>
+                <div class="gesture-action">MOUSE LEFT CLICK</div>
               </div>
 
               <div class="gesture-card">
@@ -1422,10 +1425,7 @@
                 <div class="gesture-card-icon">🔄</div>
                 <div class="gesture-card-name">Scroll</div>
                 <div class="gesture-card-desc">Index + Middle fingers move in scroll direction</div>
-                <button class="gesture-card-action-btn" onclick="openTaskModal('Scroll','Index + Middle fingers in scroll direction','scroll')">
-                  <span id="label-scroll">SCROLL PAGE</span>
-                  <span class="btn-arrow">▼</span>
-                </button>
+                <div class="gesture-action">SCROLL PAGE</div>
               </div>
 
               <div class="gesture-card">
@@ -1433,10 +1433,7 @@
                 <div class="gesture-card-icon">✊</div>
                 <div class="gesture-card-name">Drag</div>
                 <div class="gesture-card-desc">Pinch (thumb + index), hold and drag</div>
-                <button class="gesture-card-action-btn" onclick="openTaskModal('Drag','Pinch thumb + index, hold and drag','drag')">
-                  <span id="label-drag">MOUSE DRAG</span>
-                  <span class="btn-arrow">▼</span>
-                </button>
+                <div class="gesture-action">MOUSE DRAG</div>
               </div>
 
               <div class="gesture-card" style="grid-column:1/-1;">
@@ -1444,10 +1441,7 @@
                 <div class="gesture-card-icon">☝️</div>
                 <div class="gesture-card-name">Cursor Control</div>
                 <div class="gesture-card-desc">Use index finger to move and guide the cursor across the screen</div>
-                <button class="gesture-card-action-btn" onclick="openTaskModal('Cursor Control','Use index finger to move cursor','cursor')">
-                  <span id="label-cursor">CURSOR MOVE</span>
-                  <span class="btn-arrow">▼</span>
-                </button>
+                <div class="gesture-action">CURSOR MOVE</div>
               </div>
 
             </div>
@@ -1458,19 +1452,36 @@
     </div>
 
     <!-- MAPPINGS PAGE -->
-<div class="panel-body">
-  <table class="mappings-table">
-    <thead>
-      <tr>
-        <th>Gesture</th>
-        <th>Hand</th>
-        <th>Trigger</th>
-        <th>Action</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="mappingsTableBody"></tbody>
-  </table>
+<!-- MAPPINGS PAGE -->
+<div class="page" id="page-mappings">
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <span class="panel-title-icon">⇌</span>
+        GESTURE → ACTION MAPPINGS
+      </div>
+      <span class="badge">LIVE DATA</span>
+    </div>
+
+    <div class="panel-body">
+
+      <table class="mapping-table">
+        <thead>
+          <tr>
+            <th>Gesture</th>
+            <th>Hand</th>
+            <th>Trigger</th>
+            <th>Action</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="mappingsTableBody"></tbody>
+      </table>
+
+    </div>
+  </div>
+
 </div>
 
 
@@ -1553,8 +1564,8 @@
                   <button class="cam-btn" onclick="startRetrainCamera()">▶ ACTIVATE CAMERA</button>
                 </div>
               </div>
-              <img src="http://127.0.0.1:8000/video"
-     style="width:100%;height:100%;object-fit:cover;border-radius:20px;">
+              <img id="retrainVideo"
+     style="width:100%;height:100%;object-fit:cover;border-radius:20px;display:none;">
 
             </div>
           </div>
@@ -1697,20 +1708,25 @@
   function closeTaskModalDirect() {
     document.getElementById('taskModalOverlay').classList.remove('open');
   }
-  async function activateCamera() {
-  await fetch("http://127.0.0.1:8000/start", { method: "POST" });
-  document.getElementById("detectStatus").textContent = "ACTIVE";
-}
 
 async function activateCamera() {
-  await fetch("http://127.0.0.1:8000/start", { method: "POST" });
+    await fetch("http://127.0.0.1:8000/start", {
+        method: "POST"
+    });
 
-  document.getElementById("detectStatus").textContent = "ACTIVE";
+    document.getElementById("dashboardCamOverlay").style.display = "none";
+    document.getElementById("detectStatus").textContent = "ACTIVE";
+}
+async function startRetrainCamera() {
+    await fetch("http://127.0.0.1:8000/start", {
+        method: "POST"
+    });
 
-  // Remove ALL overlays completely
-  document.querySelectorAll(".camera-overlay").forEach(el => {
-    el.remove();
-  });
+    const img = document.getElementById("retrainVideo");
+    img.src = "http://127.0.0.1:8000/video";
+    img.style.display = "block";
+
+    document.getElementById("retrainCamOverlay").style.display = "none";
 }
  async function fetchMappings() {
   try {
@@ -1817,7 +1833,18 @@ async function activateCamera() {
   // ============================
 // 🔥 BACKEND LIVE PREDICTION
 // ============================
+async function updateStatus() {
+    const res = await fetch("http://127.0.0.1:8000/status");
+    const data = await res.json();
 
+    document.getElementById("detectStatus").innerText = data.status;
+    document.getElementById("totalGesturesVal").innerText = data.total_gestures;
+    document.getElementById("customGesturesVal").innerText = data.custom_gestures;
+    document.getElementById("accuracyVal").innerText = data.accuracy + "%";
+    document.getElementById("latencyVal").innerText = data.latency + "ms";
+}
+
+setInterval(updateStatus, 500);
 async function fetchPrediction() {
   try {
     const res = await fetch(API + "/prediction");
@@ -1949,6 +1976,19 @@ document.getElementById("ovModelVersion").textContent =
 }
 
 setInterval(fetchAll, 300);
+
+async function updatePrediction() {
+    const res = await fetch("http://127.0.0.1:8000/prediction");
+    const data = await res.json();
+
+    document.getElementById("lastGesture").innerText = data.gesture || "-";
+    document.getElementById("lastAction").innerText = data.action || "-";
+    document.getElementById("lastHand").innerText = data.hand || "-";
+    document.getElementById("lastConfidence").innerText =
+        data.confidence ? data.confidence + "%" : "-";
+}
+
+setInterval(updatePrediction, 300);
 
 async function loadSystemStatus() {
   try {

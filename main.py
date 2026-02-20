@@ -180,7 +180,7 @@ def start_engine(show_window=False):
             set_gesture(gesture_name)
             detected_hand = "LEFT"
 
-            if gesture_name == "PINKY_FINGER" and confidence > 0.90:
+            if gesture_name == "PINKY_FINGER" and confidence > 0.80:
                 temporal_gesture = temporal_detector.update(left_hand)
 
                 if temporal_gesture:
@@ -227,8 +227,7 @@ def start_engine(show_window=False):
                 "hand": None,
                 "timestamp": None
             })
-        
-        system_state["accuracy"] = 0
+            system_state["accuracy"] = 0
 
         if gesture_name:
             system_state["status"] = "DETECTING"
