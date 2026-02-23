@@ -45,8 +45,12 @@ class HandTracker:
 
         self.cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
 
+        print("Attempting to open camera...")
+
         if not self.cap.isOpened():
-            raise Exception("Camera not accessible")
+           print("❌ Camera failed to open.")
+        else:
+           print("✅ Camera opened successfully.")
 
         self.frame_width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.frame_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))

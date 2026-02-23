@@ -1051,20 +1051,20 @@
   </div>
   <nav>
     <div class="nav-section">Main</div>
-    <div class="nav-item active" onclick="showPage('dashboard')">
+    <div class="nav-item active" onclick="showPage('dashboard', this)">
       <span class="nav-icon">⬡</span> Dashboard
     </div>
     <div class="nav-section">Gestures</div>
-    <div class="nav-item" onclick="showPage('overview')">
+    <div class="nav-item" onclick="showPage('overview', this)">
       <span class="nav-icon">◈</span> Overview
     </div>
-    <div class="nav-item" onclick="showPage('gestures')">
+    <div class="nav-item" onclick="showPage('gestures', this)">
       <span class="nav-icon">✦</span> Gesture Library
     </div>
-    <div class="nav-item" onclick="showPage('mappings')">
+    <div class="nav-item" onclick="showPage('mappings', this)">
       <span class="nav-icon">⇌</span> Mappings
     </div>
-    <div class="nav-item" onclick="showPage('retrain')">
+    <div class="nav-item" onclick="showPage('retrain', this)">
       <span class="nav-icon">⟳</span> Retrain Model
     </div>
 
@@ -1149,9 +1149,8 @@
 </div>
 
               <img 
-  src="http://127.0.0.1:8000/video"
-  onload="document.getElementById('dashboardCamOverlay').style.display='none';"
-  style="width:100%;height:100%;object-fit:cover;border-radius:20px;"
+  id="dashboardVideo"
+  style="width:100%;height:100%;object-fit:cover;border-radius:20px;display:none;"
 >
 
             </div><!-- end camera-feed -->
@@ -1525,7 +1524,6 @@
                 <div class="form-row">
                   <input class="form-input" placeholder="Gesture name..." id="gestureName">
                   <input class="form-input" placeholder="Assigned action..." id="gestureAction">
-                  <button class="form-btn" onclick="addGesture()">+ ADD</button>
                 </div>
               </div>
               <div id="customGestureList">
@@ -1620,7 +1618,7 @@
 
 <script>
   const API = "http://127.0.0.1:8000";
-
+let retrainModeActive = false;
   // PAGE NAVIGATION
   const pages = {
     'dashboard': ['DASHBOARD', 'Live Feed & Status'],
@@ -1630,16 +1628,18 @@
     'retrain': ['RETRAIN MODEL', 'One-Click Model Retraining'],
   };
 
-  function showPage(id) {
+  function showPage(id, el) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
     document.getElementById('page-' + id).classList.add('active');
-    event.currentTarget.classList.add('active');
+    if (el) el.classList.add('active');
+
     if (pages[id]) {
-      document.getElementById('pageTitle').textContent = pages[id][0];
-      document.getElementById('pageSub').textContent = pages[id][1];
+        document.getElementById('pageTitle').textContent = pages[id][0];
+        document.getElementById('pageSub').textContent = pages[id][1];
     }
-  }
+}
 
   // OVERVIEW FLOAT
   function toggleOverview() {
@@ -1710,20 +1710,25 @@
   }
 
 async function activateCamera() {
+
+    if (retrainModeActive) return;  // 🚫 prevent dashboard camera during retrain
+
     await fetch("http://127.0.0.1:8000/start", {
         method: "POST"
     });
+
+    const img = document.getElementById("dashboardVideo");
+    img.src = "http://127.0.0.1:8000/video?mode=dashboard&ts=" + new Date().getTime();
+    img.style.display = "block";
 
     document.getElementById("dashboardCamOverlay").style.display = "none";
     document.getElementById("detectStatus").textContent = "ACTIVE";
 }
 async function startRetrainCamera() {
-    await fetch("http://127.0.0.1:8000/start", {
-        method: "POST"
-    });
 
     const img = document.getElementById("retrainVideo");
-    img.src = "http://127.0.0.1:8000/video";
+
+    img.src = "http://127.0.0.1:8000/video?mode=retrain&ts=" + new Date().getTime();
     img.style.display = "block";
 
     document.getElementById("retrainCamOverlay").style.display = "none";
@@ -1790,46 +1795,221 @@ async function startRetrainCamera() {
 
   // RETRAIN
   let retraining = false;
-  function triggerRetrain() {
-    if (retraining) return;
-    retraining = true;
 
-    const log = document.getElementById('retrainLog');
-    const bar = document.getElementById('retrainProgress');
-    const now = () => new Date().toLocaleTimeString();
+async function monitorCollection() {
 
-    const steps = [
-      [0, 'Initializing retrain pipeline...', false],
-      [15, 'Loading gesture dataset...', false],
-      [30, 'Preprocessing frames...', false],
-      [50, 'Training model layers...', false],
-      [70, 'Validating accuracy...', false],
-      [90, 'Finalizing weights...', false],
-      [100, 'Retrain complete — Accuracy: 97.8%', true],
-    ];
+  const progressBar = document.getElementById("retrainProgress");
+  const logBox = document.getElementById("retrainLog");
 
-    log.innerHTML = '';
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i >= steps.length) { clearInterval(interval); retraining = false; return; }
-      const [pct, msg, ok] = steps[i];
-      bar.style.width = pct + '%';
-      const line = document.createElement('div');
-      line.className = 'retrain-log-line';
-      line.innerHTML = `<span class="retrain-log-time">[${now()}]</span><span class="retrain-log-msg${ok ? ' ok' : ''}">${msg}</span>`;
-      log.appendChild(line);
-      log.scrollTop = log.scrollHeight;
-      i++;
-    }, 900);
+  let attempts = 0;
+  const maxAttempts = 200; // 100 seconds max
+
+  while (attempts < maxAttempts) {
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+    attempts++;
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/retrain_status");
+
+      if (!res.ok) continue;
+
+      const data = await res.json();
+
+      if (!data || !data.phase) continue;
+
+      if (data.phase === "collecting") {
+        progressBar.style.width = data.progress + "%";
+        logBox.innerHTML =
+          `<div class="retrain-log-line">
+            <span class="retrain-log-msg ok">
+              Collecting samples... ${data.progress}%
+            </span>
+          </div>`;
+      }
+
+      if (data.phase === "done") {
+        progressBar.style.width = "100%";
+        return; // EXIT PROPERLY
+      }
+
+    } catch (err) {
+      console.error("Monitor error:", err);
+    }
   }
 
-  // CLOCK
-  setInterval(() => {
-    const el = document.querySelector('.topbar-right span:last-child');
-    if (el) el.textContent = new Date().toLocaleTimeString();
-    const lg = document.getElementById('lastGestureTime');
-    if (lg) lg.textContent = new Date().toLocaleTimeString();
-  }, 1000);
+  alert("Collection timeout. Please try again.");
+}
+
+async function addGesture() {
+
+  const name = document.getElementById("gestureName").value.trim();
+  const action = document.getElementById("gestureAction").value.trim();
+
+  if (!name || !action) {
+    alert("Enter gesture name and action.");
+    return;
+  }
+
+  // ✅ Ensure engine running
+  await fetch("http://127.0.0.1:8000/start", { method: "POST" });
+
+  // Add gesture
+  await fetch("http://127.0.0.1:8000/add_gesture", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      gesture: name,
+      type: "system",
+      value: action.toUpperCase()
+    })
+  });
+
+  // Start dataset collection
+  await fetch("http://127.0.0.1:8000/collect", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ gesture: name })
+  });
+
+  logRetrain("Collecting samples...");
+}
+
+
+async function triggerRetrain() {
+  retrainModeActive = true;
+  showPage('retrain');
+  const gestureName = document.getElementById("gestureName").value.trim();
+  const actionValue = document.getElementById("gestureAction").value.trim();
+
+  const progressBar = document.getElementById("retrainProgress");
+  const logBox = document.getElementById("retrainLog");
+  const button = document.querySelector(".retrain-btn");
+
+  if (!gestureName || !actionValue) {
+    alert("Enter gesture name and action.");
+    return;
+  }
+
+  try {
+
+    button.disabled = true;
+    progressBar.style.width = "0%";
+
+    logBox.innerHTML = `
+      <div class="retrain-log-line">
+        <span class="retrain-log-msg">Initializing retrain sequence...</span>
+      </div>
+    `;
+
+    // 1️⃣ Ensure engine running
+    await fetch("http://127.0.0.1:8000/start", { method: "POST" });
+
+    // 2️⃣ Add gesture to backend
+    await fetch("http://127.0.0.1:8000/add_gesture", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        gesture: gestureName,
+        type: "system",
+        value: actionValue.toUpperCase()
+      })
+    });
+
+    // 3️⃣ Start dataset collection
+    await fetch("http://127.0.0.1:8000/collect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gesture: gestureName })
+    });
+
+    logBox.innerHTML = `
+      <div class="retrain-log-line">
+        <span class="retrain-log-msg ok">Collecting dataset samples...</span>
+      </div>
+    `;
+
+    // 4️⃣ Monitor collection progress
+    let lastProgress = 0;
+
+    while (true) {
+
+      await new Promise(r => setTimeout(r, 500));
+
+      const res = await fetch("http://127.0.0.1:8000/retrain_status");
+
+      if (!res.ok) continue;
+
+      const data = await res.json();
+
+      console.log("Retrain status:", data);
+
+      if (data.phase === "collecting") {
+
+        if (typeof data.progress !== "undefined") {
+          lastProgress = data.progress;
+        }
+
+        progressBar.style.width = lastProgress + "%";
+
+        logBox.innerHTML = `
+          <div class="retrain-log-line">
+            <span class="retrain-log-msg ok">
+              Collecting dataset... ${lastProgress}%
+            </span>
+          </div>
+        `;
+      }
+
+      if (data.phase === "training") {
+        logBox.innerHTML = `
+          <div class="retrain-log-line">
+            <span class="retrain-log-msg ok">
+              Dataset ready ✓ Starting model training...
+            </span>
+          </div>
+        `;
+      }
+
+      if (data.phase === "done") {
+        progressBar.style.width = "100%";
+        break;
+      }
+    }
+
+    // 5️⃣ Trigger retraining
+    await fetch("http://127.0.0.1:8000/retrain", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gesture: gestureName })
+    });
+
+    logBox.innerHTML = `
+      <div class="retrain-log-line">
+        <span class="retrain-log-msg ok">
+          Model retraining started successfully ✓
+        </span>
+      </div>
+    `;
+
+  } catch (err) {
+
+    console.error("Retrain error:", err);
+
+    logBox.innerHTML = `
+      <div class="retrain-log-line">
+        <span class="retrain-log-msg" style="color:#ff3355;">
+          Retrain failed. Check backend console.
+        </span>
+      </div>
+    `;
+
+  } finally {
+    button.disabled = false;
+    retrainModeActive = true;
+    showPage('retrain');
+  }
+}
   // ============================
 // 🔥 BACKEND LIVE PREDICTION
 // ============================

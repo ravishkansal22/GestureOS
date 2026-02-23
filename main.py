@@ -5,9 +5,11 @@ import os
 import time
 import cv2
 import threading
+import csv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "gesture_model.keras")
+DATASET_PATH = os.path.join(BASE_DIR, "data", "dataset.csv")
 
 from controller.action_engine import ActionEngine
 from controller.gesture_mapper import GestureMapper
@@ -20,7 +22,7 @@ from vision.temporal_gesture_detection import TemporalGestureDetector
 
 
 # ============================================================
-# 🔥 GLOBAL SHARED STATE (used by server.py)
+# 🔥 GLOBAL SHARED STATE
 # ============================================================
 
 latest_prediction = {
@@ -42,35 +44,41 @@ system_state = {
     "camera": "DISCONNECTED"
 }
 
+retrain_state = {
+    "phase": "idle",
+    "progress": 0
+}
 
-# Thread control
+ENGINE_MODE = "detect"
+COLLECT_GESTURE = None
+COLLECT_COUNT = 0
+COLLECT_TARGET = 200
+
 _engine_running = False
 _engine_thread = None
 latest_frame = None
-
+classifier = None
 
 
 def get_latest_frame():
     return latest_frame
 
+
 # ============================================================
-# 🎯 ENGINE START FUNCTION (called by server.py)
+# 🎯 ENGINE LOOP
 # ============================================================
 
-def start_engine(show_window=False):
+def _engine_loop(show_window=False):
 
     global _engine_running
-
-    if _engine_running:
-        return
-
-    _engine_running = True
+    global latest_frame
+    global classifier
+    global ENGINE_MODE, COLLECT_GESTURE, COLLECT_COUNT
 
     print("=====================================")
     print("      GestureOS Engine Started")
     print("=====================================")
 
-    # Initialize components
     tracker = HandTracker(camera_index=0)
     mouse_detector = MouseGestureDetector()
     classifier = GestureClassifier()
@@ -79,58 +87,89 @@ def start_engine(show_window=False):
 
     mapper = GestureMapper()
     engine = ActionEngine()
+
     system_state["custom_gestures"] = len(mapper.list_gestures())
-    system_state["status"] = "ONLINE"
-    system_state["camera"] = "CONNECTED"
     system_state["status"] = "ACTIVE"
     system_state["camera"] = "CONNECTED"
 
-
     last_gesture_time = 0
     gesture_cooldown = 1.0
-
-    model_last_modified = os.path.getmtime(MODEL_PATH)
 
     fps_counter = 0
     fps_timer = time.time()
 
     while _engine_running:
-        if not _engine_running:
-           break
 
         start_time = time.time()
 
         frame, hands = tracker.update()
 
         if frame is None:
-            break
-        global latest_frame
-        latest_frame = frame.copy()
+            continue
+
+        latest_frame = frame
 
         right_hand = None
         left_hand = None
-        
-        gesture_name = None
-        confidence = 0.0
-        detected_action = None
-        detected_hand = None
-        
+
         for hand in hands:
             if hand.hand_label == "Right":
                 right_hand = hand
             elif hand.hand_label == "Left":
                 left_hand = hand
 
-    
+        # =====================================================
+        # 🔥 COLLECTION MODE (CSV BASED)
+        # =====================================================
+        if ENGINE_MODE == "collect":
+
+            retrain_state["phase"] = "collecting"
+
+            if left_hand:
+
+                landmarks = []
+                frame_width = tracker.frame_width
+                frame_height = tracker.frame_height
+
+                for (x, y) in left_hand.landmarks:
+                    nx = x / frame_width
+                    ny = y / frame_height
+                    landmarks.append(nx)
+                    landmarks.append(ny)
+
+                row = landmarks + [COLLECT_GESTURE]
+
+                with open(DATASET_PATH, "a", newline="") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(row)
+
+                COLLECT_COUNT += 1
+
+                retrain_state["progress"] = int(
+                    (COLLECT_COUNT / COLLECT_TARGET) * 100
+                )
+
+            if COLLECT_COUNT >= COLLECT_TARGET:
+                ENGINE_MODE = "detect"
+                COLLECT_COUNT = 0
+                retrain_state["phase"] = "done"
+                retrain_state["progress"] = 100
+                print("Dataset collection completed.")
+
+            continue
 
         # =====================================================
         # RIGHT HAND → MOUSE CONTROL
         # =====================================================
 
+        gesture_name = None
+        confidence = 0.0
+        detected_action = None
+        detected_hand = None
+
         if right_hand:
 
             mouse_result = mouse_detector.detect([right_hand])
-
             gesture = mouse_result["gesture"]
             position = mouse_result["position"]
             scroll = mouse_result["scroll"]
@@ -166,7 +205,7 @@ def start_engine(show_window=False):
                 detected_hand = "RIGHT"
 
         # =====================================================
-        # LEFT HAND → CLASSIFIED GESTURES
+        # LEFT HAND → CLASSIFIER
         # =====================================================
 
         if left_hand:
@@ -177,21 +216,25 @@ def start_engine(show_window=False):
                 tracker.frame_height
             )
 
+            CONF_THRESHOLD = 0.85
+
+            if confidence < CONF_THRESHOLD:
+                gesture_name = None
+                confidence = 0
+
             set_gesture(gesture_name)
             detected_hand = "LEFT"
 
-            if gesture_name == "PINKY_FINGER" and confidence > 0.80:
+            if gesture_name == "PINKY_FINGER" and confidence > 0.85:
                 temporal_gesture = temporal_detector.update(left_hand)
-
                 if temporal_gesture:
                     engine.execute(temporal_gesture)
                     detected_action = temporal_gesture
-
             else:
                 temporal_detector.reset()
 
         # =====================================================
-        # STATIC EXECUTION WITH COOLDOWN
+        # EXECUTION COOLDOWN
         # =====================================================
 
         current_time = time.time()
@@ -206,7 +249,7 @@ def start_engine(show_window=False):
             last_gesture_time = current_time
 
         # =====================================================
-        # UPDATE SHARED STATE FOR FRONTEND
+        # UPDATE STATE
         # =====================================================
 
         if gesture_name:
@@ -218,8 +261,8 @@ def start_engine(show_window=False):
                 "timestamp": time.time()
             })
             system_state["accuracy"] = round(confidence * 100, 2)
+            system_state["status"] = "DETECTING"
         else:
-    # Reset prediction when no gesture
             latest_prediction.update({
                 "gesture": None,
                 "action": None,
@@ -228,17 +271,9 @@ def start_engine(show_window=False):
                 "timestamp": None
             })
             system_state["accuracy"] = 0
-
-        if gesture_name:
-            system_state["status"] = "DETECTING"
-        else:
-           system_state["status"] = "NONE"
-        # =====================================================
-        # FPS & LATENCY TRACKING
-        # =====================================================
+            system_state["status"] = "NONE"
 
         fps_counter += 1
-
         if time.time() - fps_timer >= 1:
             system_state["fps"] = fps_counter
             fps_counter = 0
@@ -246,28 +281,30 @@ def start_engine(show_window=False):
 
         system_state["latency"] = int((time.time() - start_time) * 1000)
 
-        # =====================================================
-        # OPTIONAL DISPLAY
-        # =====================================================
-
-        if show_window:
-            if gesture_name:
-                cv2.putText(
-                    frame,
-                    f"{gesture_name} ({confidence:.2f})",
-                    (10, 50),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (0, 255, 0),
-                    2
-                )
-            # cv2.imshow("GestureOS", frame)
-
-            if cv2.waitKey(1) & 0xFF == 27:
-                break
-
     tracker.release()
     cv2.destroyAllWindows()
+
+
+# ============================================================
+# ENGINE CONTROL
+# ============================================================
+
+def start_engine(show_window=False):
+    global _engine_running, _engine_thread
+
+    if _engine_running:
+        return
+
+    _engine_running = True
+
+    _engine_thread = threading.Thread(
+        target=_engine_loop,
+        args=(show_window,),
+        daemon=True
+    )
+    _engine_thread.start()
+
+
 def stop_engine():
     global _engine_running
     _engine_running = False
@@ -275,19 +312,12 @@ def stop_engine():
     system_state["camera"] = "DISCONNECTED"
 
 
+def reload_model():
+    global classifier
+    print("Reloading updated model...")
+    classifier = GestureClassifier()
+    print("Model reloaded successfully.")
 
-
-# ============================================================
-# SAFE CLI RUN (Optional)
-# ============================================================
 
 if __name__ == "__main__":
     start_engine(show_window=True)
-import json
-
-def load_gesture_map():
-    try:
-        with open("gesture_action_map.json", "r") as f:
-            return json.load(f)
-    except:
-        return {}

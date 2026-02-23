@@ -157,8 +157,10 @@ class AutoGestureCollector:
 
 if __name__ == "__main__":
 
-    gesture_name = input("Enter gesture name: ").strip().upper()
+    if len(sys.argv) > 1:
+        gesture_name = sys.argv[1].strip().upper()
+    else:
+        gesture_name = input("Enter gesture name: ").strip().upper()
 
     collector = AutoGestureCollector(gesture_name)
-
     collector.run()

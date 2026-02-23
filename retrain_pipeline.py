@@ -1,14 +1,25 @@
-import os
+from training.train_model import train
+import main
 
-def retrain():
+def retrain(gesture_name):
 
-    print("Starting retraining pipeline...")
+    print("Starting training phase...")
 
-    os.system("python training/auto_collect.py")
+    # 🔥 DO NOT stop engine
+    # 🔥 DO NOT open camera
+    # 🔥 DO NOT restart engine
 
-    os.system("python training/train_model.py")
+    main.retrain_state["phase"] = "training"
+    main.retrain_state["progress"] = 0
 
-    print("Retraining completed.")
+    train()
 
-if __name__ == "__main__":
-    retrain()
+    main.retrain_state["progress"] = 90
+
+    print("Reloading updated model...")
+    main.reload_model()
+
+    main.retrain_state["progress"] = 100
+    main.retrain_state["phase"] = "done"
+
+    print("Retraining completed successfully.")

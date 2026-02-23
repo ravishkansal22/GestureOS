@@ -32,5 +32,9 @@
     "PINKY_FINGER": {
         "type": "system",
         "value": "None"
+    },
+    "L SIGN": {
+        "type": "system",
+        "value": "OPEN KAGGLE"
     }
 }

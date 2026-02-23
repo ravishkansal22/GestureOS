@@ -68,7 +68,8 @@ def build_model(input_size, num_classes):
 def train():
 
     X, y = load_dataset()
-
+    if len(set(y)) < 2:
+        raise ValueError("Need at least 2 gesture classes to train.")
     y_encoded, label_map = encode_labels(y)
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -96,7 +97,6 @@ def train():
 
     print("\nModel saved to:", MODEL_PATH)
     print("Labels saved to:", LABEL_PATH)
-
 
 if __name__ == "__main__":
     train()

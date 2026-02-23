@@ -1,9 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from retrain_pipeline import retrain
+from fastapi import BackgroundTasks
+import retrain_pipeline
+from training.train_model import train
+import time
+import main
+import subprocess
 import cv2
 import threading
-import main
 import json
 import os
 
@@ -41,17 +47,9 @@ def load_gesture_map():
 # ============================================================
 
 @app.post("/start")
-def start():
-    """
-    Starts gesture engine in background thread
-    Prevents multiple instances
-    """
-    if main._engine_running:
-        return {"status": "Already running"}
-
-    threading.Thread(target=main.start_engine, daemon=True).start()
-    return {"status": "Camera started"}
-
+def start_engine():
+    main.start_engine(show_window=True)
+    return {"status": "engine started"}
 
 @app.post("/stop")
 def stop():
@@ -61,6 +59,9 @@ def stop():
     main.stop_engine()
     return {"status": "Engine stopped"}
 
+@app.get("/retrain_status")
+def retrain_status():
+    return main.retrain_state
 # ============================================================
 # VIDEO STREAM ROUTE
 # ============================================================
@@ -68,18 +69,25 @@ def stop():
 def generate_frames():
     while True:
         frame = main.get_latest_frame()
-        if frame is None:
+
+        if not main._engine_running:
+            # Engine stopped → wait cleanly
+            time.sleep(0.1)
             continue
 
-        _, buffer = cv2.imencode(".jpg", frame)
-        frame_bytes = buffer.tobytes()
+        if frame is None:
+            time.sleep(0.01)
+            continue
+
+        ret, buffer = cv2.imencode(".jpg", frame)
+        if not ret:
+            continue
 
         yield (
             b"--frame\r\n"
-            b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
         )
-
-
+        
 @app.get("/video")
 def video_feed():
     return StreamingResponse(
@@ -145,18 +153,77 @@ def get_mappings():
 # ============================================================
 # RETRAIN PLACEHOLDER (No conflict change)
 # ============================================================
-
 @app.post("/retrain")
-def retrain():
-    """
-    Placeholder retrain endpoint
-    (We will wire this properly next)
-    """
-    return {"message": "Retraining triggered"}
+def retrain_model(background_tasks: BackgroundTasks):
+
+    def train_task():
+        try:
+            main.retrain_state["phase"] = "training"
+            main.retrain_state["progress"] = 10
+
+            from retrain_pipeline import retrain
+            retrain(None)
+
+            main.retrain_state["progress"] = 100
+            main.retrain_state["phase"] = "done"
+
+        except Exception as e:
+            print("TRAIN ERROR:", e)
+            main.retrain_state["phase"] = "error"
+            main.retrain_state["progress"] = 0
+
+    background_tasks.add_task(train_task)
+
+
+    return {"status": "Training started"}
+@app.post("/add_gesture")
+def add_gesture(data: dict):
+
+    gesture = data.get("gesture")
+    action_type = data.get("type")
+    value = data.get("value")
+
+    if not gesture:
+        return {"error": "Gesture name required"}
+
+    gesture = gesture.upper()
+
+    gesture_map = load_gesture_map()
+
+    if gesture in gesture_map:
+        return {"error": "Gesture already exists"}
+
+    gesture_map[gesture] = {
+        "type": action_type,
+        "value": value
+    }
+
+    with open("data/gesture_action_map.json", "w") as f:
+        json.dump(gesture_map, f, indent=4)
+
+    return {"status": "Gesture added successfully"}
 
 # ============================================================
 # ROOT
 # ============================================================
+@app.post("/collect")
+def start_collection(data: dict):
+
+    gesture = data.get("gesture")
+
+    if not gesture:
+        return {"error": "Gesture required"}
+
+    main.ENGINE_MODE = "collect"
+    main.COLLECT_GESTURE = gesture
+    main.COLLECT_COUNT = 0
+
+    main.retrain_state["phase"] = "collecting"
+    main.retrain_state["progress"] = 0
+
+    return {"status": "Collection started"}
+    print("COLLECT ENDPOINT HIT")
+    print("ENGINE MODE SET TO:", main.ENGINE_MODE)
 
 @app.get("/")
 def root():
