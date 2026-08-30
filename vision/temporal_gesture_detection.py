@@ -23,7 +23,7 @@ class TemporalGestureDetector:
         self.direction = None
         self.direction_count = 0
 
-    def update(self, hand):
+    def update(self, hand, frame_width, frame_height):
 
         if hand is None:
             self.reset()
@@ -35,7 +35,11 @@ class TemporalGestureDetector:
         if current_time - self.last_gesture_time < self.cooldown:
             return None
 
-        x, y = hand.landmarks[0]
+        px, py = hand.landmarks[0]
+
+        # normalize to 0..1 so thresholds are resolution-independent
+        x = px / frame_width
+        y = py / frame_height
 
         self.positions.append((x, y))
 

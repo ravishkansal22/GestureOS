@@ -1192,13 +1192,13 @@
               <div class="panel-title"><span class="panel-title-icon">◈</span> SYSTEM STATUS</div>
             </div>
             <div class="panel-body">
-              <div class="ov-row"><span class="ov-key">Status</span><span class="ov-val ok">● ONLINE</span></div>
-              <div class="ov-row"><span class="ov-key">Camera</span><span class="ov-val ok">CONNECTED</span></div>
-              <div class="ov-row"><span class="ov-key">Model</span><span class="ov-val">v2.4.1</span></div>
-              <div class="ov-row"><span class="ov-key">CPU Usage</span><span class="ov-val warn">42%</span></div>
-              <div class="ov-row"><span class="ov-key">Memory</span><span class="ov-val">1.2 GB</span></div>
-              <div class="ov-row"><span class="ov-key">Uptime</span><span class="ov-val">04:23:11</span></div>
-              <div class="ov-row"><span class="ov-key">Last Retrain</span><span class="ov-val">2h ago</span></div>
+              <div class="ov-row"><span class="ov-key">Status</span><span class="ov-val ok" id="dashStatus">-</span></div>
+              <div class="ov-row"><span class="ov-key">Camera</span><span class="ov-val ok" id="dashCamera">-</span></div>
+              <div class="ov-row"><span class="ov-key">Model</span><span class="ov-val" id="dashModel">-</span></div>
+              <div class="ov-row"><span class="ov-key">CPU Usage</span><span class="ov-val warn" id="dashCPU">-</span></div>
+              <div class="ov-row"><span class="ov-key">Memory</span><span class="ov-val" id="dashMemory">-</span></div>
+              <div class="ov-row"><span class="ov-key">Uptime</span><span class="ov-val" id="dashUptime">-</span></div>
+              <div class="ov-row"><span class="ov-key">Last Retrain</span><span class="ov-val" id="dashLastRetrain">-</span></div>
             </div>
           </div>
 
@@ -1254,7 +1254,7 @@
     </div>
 
     <div class="stat-card">
-      <div class="stat-number">97.3%</div>
+      <div class="stat-number" id="ovAccuracy">97.3%</div>
       <div class="stat-label">Model Accuracy</div>
     </div>
 
@@ -1713,12 +1713,12 @@ async function activateCamera() {
 
     if (retrainModeActive) return;  // 🚫 prevent dashboard camera during retrain
 
-    await fetch("http://127.0.0.1:8000/start", {
+    await fetch(API + "/start", {
         method: "POST"
     });
 
     const img = document.getElementById("dashboardVideo");
-    img.src = "http://127.0.0.1:8000/video?mode=dashboard&ts=" + new Date().getTime();
+    img.src = API + "/video?mode=dashboard&ts=" + new Date().getTime();
     img.style.display = "block";
 
     document.getElementById("dashboardCamOverlay").style.display = "none";
@@ -1726,16 +1726,20 @@ async function activateCamera() {
 }
 async function startRetrainCamera() {
 
+    await fetch(API + "/start", {
+        method: "POST"
+    });
+
     const img = document.getElementById("retrainVideo");
 
-    img.src = "http://127.0.0.1:8000/video?mode=retrain&ts=" + new Date().getTime();
+    img.src = API + "/video?mode=retrain&ts=" + new Date().getTime();
     img.style.display = "block";
 
     document.getElementById("retrainCamOverlay").style.display = "none";
 }
  async function fetchMappings() {
   try {
-    const res = await fetch("http://127.0.0.1:8000/mappings");
+    const res = await fetch(API + "/mappings");
     const data = await res.json();
 
     console.log("Fetched mappings:", data);
@@ -1774,107 +1778,12 @@ async function startRetrainCamera() {
 
 
 
-  // ADD GESTURE
-  function addGesture() {
-    const name = document.getElementById('gestureName').value.trim();
-    const action = document.getElementById('gestureAction').value.trim();
-    if (!name || !action) return;
-
-    const list = document.getElementById('customGestureList');
-    const div = document.createElement('div');
-    div.className = 'custom-gesture-item';
-    div.innerHTML = `<span class="cg-name">${name}</span><span class="cg-action">${action.toUpperCase()}</span><span class="cg-del" onclick="removeGesture(this)" title="Remove">✕</span>`;
-    list.appendChild(div);
-    document.getElementById('gestureName').value = '';
-    document.getElementById('gestureAction').value = '';
-  }
-
   function removeGesture(el) {
     if (confirm('Remove this gesture?')) el.parentElement.remove();
   }
 
   // RETRAIN
   let retraining = false;
-
-async function monitorCollection() {
-
-  const progressBar = document.getElementById("retrainProgress");
-  const logBox = document.getElementById("retrainLog");
-
-  let attempts = 0;
-  const maxAttempts = 200; // 100 seconds max
-
-  while (attempts < maxAttempts) {
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-    attempts++;
-
-    try {
-      const res = await fetch("http://127.0.0.1:8000/retrain_status");
-
-      if (!res.ok) continue;
-
-      const data = await res.json();
-
-      if (!data || !data.phase) continue;
-
-      if (data.phase === "collecting") {
-        progressBar.style.width = data.progress + "%";
-        logBox.innerHTML =
-          `<div class="retrain-log-line">
-            <span class="retrain-log-msg ok">
-              Collecting samples... ${data.progress}%
-            </span>
-          </div>`;
-      }
-
-      if (data.phase === "done") {
-        progressBar.style.width = "100%";
-        return; // EXIT PROPERLY
-      }
-
-    } catch (err) {
-      console.error("Monitor error:", err);
-    }
-  }
-
-  alert("Collection timeout. Please try again.");
-}
-
-async function addGesture() {
-
-  const name = document.getElementById("gestureName").value.trim();
-  const action = document.getElementById("gestureAction").value.trim();
-
-  if (!name || !action) {
-    alert("Enter gesture name and action.");
-    return;
-  }
-
-  // ✅ Ensure engine running
-  await fetch("http://127.0.0.1:8000/start", { method: "POST" });
-
-  // Add gesture
-  await fetch("http://127.0.0.1:8000/add_gesture", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      gesture: name,
-      type: "system",
-      value: action.toUpperCase()
-    })
-  });
-
-  // Start dataset collection
-  await fetch("http://127.0.0.1:8000/collect", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ gesture: name })
-  });
-
-  logRetrain("Collecting samples...");
-}
-
 
 async function triggerRetrain() {
   retrainModeActive = true;
@@ -1903,10 +1812,10 @@ async function triggerRetrain() {
     `;
 
     // 1️⃣ Ensure engine running
-    await fetch("http://127.0.0.1:8000/start", { method: "POST" });
+    await fetch(API + "/start", { method: "POST" });
 
     // 2️⃣ Add gesture to backend
-    await fetch("http://127.0.0.1:8000/add_gesture", {
+    await fetch(API + "/add_gesture", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1917,7 +1826,7 @@ async function triggerRetrain() {
     });
 
     // 3️⃣ Start dataset collection
-    await fetch("http://127.0.0.1:8000/collect", {
+    await fetch(API + "/collect", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ gesture: gestureName })
@@ -1936,7 +1845,7 @@ async function triggerRetrain() {
 
       await new Promise(r => setTimeout(r, 500));
 
-      const res = await fetch("http://127.0.0.1:8000/retrain_status");
+      const res = await fetch(API + "/retrain_status");
 
       if (!res.ok) continue;
 
@@ -1978,7 +1887,7 @@ async function triggerRetrain() {
     }
 
     // 5️⃣ Trigger retraining
-    await fetch("http://127.0.0.1:8000/retrain", {
+    await fetch(API + "/retrain", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ gesture: gestureName })
@@ -2006,196 +1915,104 @@ async function triggerRetrain() {
 
   } finally {
     button.disabled = false;
-    retrainModeActive = true;
+    retrainModeActive = false;
     showPage('retrain');
   }
 }
   // ============================
-// 🔥 BACKEND LIVE PREDICTION
+// 🔥 BACKEND LIVE STATUS + PREDICTION
+// (single poller — replaces the previous set of overlapping ones)
 // ============================
-async function updateStatus() {
-    const res = await fetch("http://127.0.0.1:8000/status");
-    const data = await res.json();
 
-    document.getElementById("detectStatus").innerText = data.status;
-    document.getElementById("totalGesturesVal").innerText = data.total_gestures;
-    document.getElementById("customGesturesVal").innerText = data.custom_gestures;
-    document.getElementById("accuracyVal").innerText = data.accuracy + "%";
-    document.getElementById("latencyVal").innerText = data.latency + "ms";
+function formatUptime(totalSeconds) {
+  const s = Math.max(0, totalSeconds || 0);
+  const h = String(Math.floor(s / 3600)).padStart(2, "0");
+  const m = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
+  const sec = String(Math.floor(s % 60)).padStart(2, "0");
+  return `${h}:${m}:${sec}`;
 }
 
-setInterval(updateStatus, 500);
-async function fetchPrediction() {
-  try {
-    const res = await fetch(API + "/prediction");
-    const data = await res.json();
-
-    if (!data.gesture) return;
-
-    document.getElementById("detectStatus").textContent = "ACTIVE";
-
-    const rows = document.querySelectorAll(".panel-body .ov-row");
-
-    if (rows.length >= 4) {
-      rows[0].querySelector(".ov-val").textContent = data.gesture;
-      rows[1].querySelector(".ov-val").textContent = data.action;
-      rows[2].querySelector(".ov-val").textContent = data.hand;
-      rows[3].querySelector(".ov-val").textContent =
-        data.confidence + "%";
-    }
-
-  } catch (err) {
-    console.log("Backend not reachable");
-  }
+function formatRelativeTime(unixSeconds) {
+  if (!unixSeconds) return "Never";
+  const diff = Math.max(0, Date.now() / 1000 - unixSeconds);
+  if (diff < 60) return "Just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
 }
+
 async function fetchAll() {
   try {
-    const [statusRes, predictionRes] = await Promise.all([
-      fetch("http://127.0.0.1:8000/status"),
-      fetch("http://127.0.0.1:8000/prediction")
+    const [statusRes, predictionRes, retrainStatusRes] = await Promise.all([
+      fetch(API + "/status"),
+      fetch(API + "/prediction"),
+      fetch(API + "/retrain_status")
     ]);
 
     const status = await statusRes.json();
     const prediction = await predictionRes.json();
-
-    // ===== GESTURE LIBRARY LINKING =====
-
-// Update gesture counts
-document.getElementById("leftGestureCount").textContent =
-  status.left_hand_gestures;
-
-document.getElementById("rightGestureCount").textContent =
-  status.right_hand_gestures;
-
-// Update gesture action labels dynamically
-const library = status.gesture_library;
-
-if (library) {
-  Object.keys(library).forEach(key => {
-    const el = document.getElementById("label-" + key);
-    if (el) {
-      el.textContent = library[key];
-    }
-  });
-}
-
+    const retrainStatus = await retrainStatusRes.json();
+    const lastRetrainText = formatRelativeTime(retrainStatus.last_retrain_at);
 
     // 🔹 TOP STATS
-    document.getElementById("totalGesturesVal").textContent =
-      status.total_gestures;
+    document.getElementById("detectStatus").textContent = status.status;
+    document.getElementById("totalGesturesVal").textContent = status.total_gestures;
+    document.getElementById("customGesturesVal").textContent = status.custom_gestures;
+    document.getElementById("accuracyVal").textContent = status.accuracy + "%";
+    document.getElementById("latencyVal").textContent = status.latency + "ms";
 
-    document.getElementById("accuracyVal").textContent =
-      status.accuracy + "%";
+    // 🔹 DASHBOARD PAGE — SYSTEM STATUS PANEL
+    document.getElementById("dashStatus").textContent = status.status;
+    document.getElementById("dashCamera").textContent = status.camera;
+    document.getElementById("dashModel").textContent = status.model_version;
+    document.getElementById("dashCPU").textContent = status.cpu_usage + "%";
+    document.getElementById("dashMemory").textContent = status.memory_mb + " MB";
+    document.getElementById("dashUptime").textContent = formatUptime(status.uptime_seconds);
+    document.getElementById("dashLastRetrain").textContent = lastRetrainText;
 
-    document.getElementById("latencyVal").textContent =
-      status.latency + "ms";
+    // 🔹 SYSTEM STATUS / OVERVIEW PANELS
+    document.getElementById("ovSystemStatus").textContent = status.status;
+    document.getElementById("ovCameraStatus").textContent = status.camera;
+    document.getElementById("ovActiveModel").textContent = "Zesture CNN " + status.model_version;
+    document.getElementById("ovCustomGestures").textContent = status.custom_gestures + " Loaded";
+    document.getElementById("ovCPUUsage").textContent = status.cpu_usage + "%";
+    document.getElementById("ovMemory").textContent = status.memory_mb + " MB";
+    document.getElementById("ovUptime").textContent = formatUptime(status.uptime_seconds);
+    document.getElementById("ovLastRetrain").textContent = lastRetrainText;
 
-    document.getElementById("customGesturesVal").textContent =
-      status.custom_gestures;
-    
-    document.getElementById("ovSystemStatus").textContent =
-      status.status;
-
-    document.getElementById("ovCameraStatus").textContent =
-      status.camera;
-
-    document.getElementById("ovCustomGestures").textContent =
-      status.custom_gestures + " Loaded";
-
-    document.getElementById("ovCPUUsage").textContent =
-      status.cpu_usage + "%";
-
-    document.getElementById("ovMemory").textContent =
-      status.memory;
-
-    document.getElementById("ovUptime").textContent =
-      status.uptime;
-    
-    // ===== OVERVIEW TOP CARDS =====
-document.getElementById("ovTotalGestures").textContent =
-  status.total_gestures;
-
-document.getElementById("ovAccuracy").textContent =
-  status.accuracy + "%";
-
-document.getElementById("ovFPS").textContent =
-  status.fps + "fps";
-
-document.getElementById("ovModelVersion").textContent =
-  "v2.4.1"; // or status.model_version if backend sends it
-
+    // 🔹 OVERVIEW TOP CARDS
+    document.getElementById("ovTotalGestures").textContent = status.total_gestures;
+    document.getElementById("ovAccuracy").textContent = status.accuracy + "%";
+    document.getElementById("ovFPS").textContent = status.fps + "fps";
+    document.getElementById("ovModelVersion").textContent = status.model_version;
 
     // 🔹 LAST DETECTED
     if (prediction && prediction.gesture !== null) {
-      document.getElementById("lastGesture").textContent =
-        prediction.gesture;
-
-      document.getElementById("lastAction").textContent =
-        prediction.action;
-
-      document.getElementById("lastHand").textContent =
-        prediction.hand;
-
-      document.getElementById("lastConfidence").textContent =
-        prediction.confidence + "%";
-
+      document.getElementById("lastGesture").textContent = prediction.gesture;
+      document.getElementById("lastAction").textContent = prediction.action || "-";
+      document.getElementById("lastHand").textContent = prediction.hand;
+      document.getElementById("lastConfidence").textContent = prediction.confidence + "%";
       document.getElementById("lastTimestamp").textContent =
         new Date(prediction.timestamp * 1000).toLocaleTimeString();
-    }else {
-  // 🔥 CLEAR UI WHEN NO GESTURE
-  document.getElementById("lastGesture").textContent = "-";
-  document.getElementById("lastAction").textContent = "-";
-  document.getElementById("lastHand").textContent = "-";
-  document.getElementById("lastConfidence").textContent = "0%";
-  document.getElementById("lastTimestamp").textContent = "--:--:--";
-}
-
-  } catch (err) {
-    console.log("Sync error:", err);
-  }
-}
-
-setInterval(fetchAll, 300);
-
-async function updatePrediction() {
-    const res = await fetch("http://127.0.0.1:8000/prediction");
-    const data = await res.json();
-
-    document.getElementById("lastGesture").innerText = data.gesture || "-";
-    document.getElementById("lastAction").innerText = data.action || "-";
-    document.getElementById("lastHand").innerText = data.hand || "-";
-    document.getElementById("lastConfidence").innerText =
-        data.confidence ? data.confidence + "%" : "-";
-}
-
-setInterval(updatePrediction, 300);
-
-async function loadSystemStatus() {
-  try {
-    const res = await fetch(API + "/status");
-    const data = await res.json();
-
-    const stats = document.querySelectorAll(".stat-val");
-
-    if (stats.length >= 4) {
-      stats[0].textContent = data.total_gestures;
-      stats[2].textContent = data.accuracy + "%";
-      stats[3].textContent = data.latency + "ms";
+    } else {
+      document.getElementById("lastGesture").textContent = "-";
+      document.getElementById("lastAction").textContent = "-";
+      document.getElementById("lastHand").textContent = "-";
+      document.getElementById("lastConfidence").textContent = "0%";
+      document.getElementById("lastTimestamp").textContent = "--:--:--";
     }
 
   } catch (err) {
-    console.log("Status not reachable");
+    console.log("Backend not reachable:", err);
   }
 }
 
-loadSystemStatus();
-
 document.addEventListener("DOMContentLoaded", () => {
   fetchMappings();
+  fetchAll();
 });
 
-setInterval(fetchPrediction, 300);
-fetchMappings();
+setInterval(fetchAll, 500);
 </script>
 </body>
 </html>

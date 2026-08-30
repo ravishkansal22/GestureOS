@@ -15,11 +15,6 @@ class ActionEngine:
 
         action_data = self.mapper.get_action(gesture_name)
 
-        # Debug prints (keep for now)
-        print("DEBUG gesture:", gesture_name)
-        print("DEBUG mapping:", action_data)
-        print("DEBUG type:", type(action_data))
-
         if action_data is None:
 
             print(f"No action mapped for gesture: {gesture_name}")

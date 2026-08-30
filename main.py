@@ -6,19 +6,21 @@ import time
 import cv2
 import threading
 import csv
+import psutil
+import traceback
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "gesture_model.keras")
 DATASET_PATH = os.path.join(BASE_DIR, "data", "dataset.csv")
 
 from controller.action_engine import ActionEngine
-from controller.gesture_mapper import GestureMapper
 from vision.hand_tracker import HandTracker
 from vision.mouse_gesture_detector import MouseGestureDetector
 from vision.gesture_classifier import GestureClassifier
 from backend.gesture_state import set_gesture
 from controller.cursor_controller import CursorController
 from vision.temporal_gesture_detection import TemporalGestureDetector
+from settings_manager import load_settings
 
 
 # ============================================================
@@ -41,12 +43,16 @@ system_state = {
     "total_gestures": 0,
     "custom_gestures": 0,
     "status": "INITIALIZING",
-    "camera": "DISCONNECTED"
+    "camera": "DISCONNECTED",
+    "cpu_usage": 0,
+    "memory_mb": 0,
+    "uptime_seconds": 0
 }
 
 retrain_state = {
     "phase": "idle",
-    "progress": 0
+    "progress": 0,
+    "last_retrain_at": None
 }
 
 ENGINE_MODE = "detect"
@@ -75,31 +81,60 @@ def _engine_loop(show_window=False):
     global classifier
     global ENGINE_MODE, COLLECT_GESTURE, COLLECT_COUNT
 
+    import pyautogui
     print("=====================================")
     print("      GestureOS Engine Started")
+    print(f"      [build check] pyautogui.PAUSE = {pyautogui.PAUSE} (must be 0 — if this prints 0.1, you are running an old/cached process)")
     print("=====================================")
 
-    tracker = HandTracker(camera_index=0)
-    mouse_detector = MouseGestureDetector()
-    classifier = GestureClassifier()
-    temporal_detector = TemporalGestureDetector()
-    cursor = CursorController()
+    settings = load_settings()
+    CONF_THRESHOLD = settings.get("confidence_threshold", 0.85)
+    gesture_cooldown = settings.get("gesture_cooldown", 1.0)
+    camera_index = settings.get("camera_index", 0)
 
-    mapper = GestureMapper()
-    engine = ActionEngine()
+    tracker = None
 
-    system_state["custom_gestures"] = len(mapper.list_gestures())
+    try:
+        tracker = HandTracker(camera_index=camera_index)
+
+        if not tracker.cap.isOpened():
+            raise RuntimeError("Camera failed to open")
+
+        # some camera/driver combos report 0x0 before the first frame is read
+        tracker.frame_width = tracker.frame_width or 640
+        tracker.frame_height = tracker.frame_height or 480
+
+        mouse_detector = MouseGestureDetector()
+        classifier = GestureClassifier()
+        temporal_detector = TemporalGestureDetector()
+        cursor = CursorController()
+
+        engine = ActionEngine()
+
+    except Exception as e:
+        # Without this, a startup failure (bad model file, camera driver
+        # error, etc.) kills this background thread silently and the
+        # frontend is left polling /status forever showing "INITIALIZING".
+        print("Engine failed to start:", e)
+        system_state["status"] = "ERROR"
+        system_state["camera"] = "DISCONNECTED"
+        _engine_running = False
+        if tracker is not None:
+            tracker.release()
+        return
+
+    system_state["custom_gestures"] = len(engine.mapper.list_gestures())
     system_state["status"] = "ACTIVE"
     system_state["camera"] = "CONNECTED"
 
     last_gesture_time = 0
-    gesture_cooldown = 1.0
+    engine_start_time = time.time()
 
     fps_counter = 0
     fps_timer = time.time()
 
     while _engine_running:
-
+      try:
         start_time = time.time()
 
         frame, hands = tracker.update()
@@ -216,8 +251,6 @@ def _engine_loop(show_window=False):
                 tracker.frame_height
             )
 
-            CONF_THRESHOLD = 0.85
-
             if confidence < CONF_THRESHOLD:
                 gesture_name = None
                 confidence = 0
@@ -225,23 +258,32 @@ def _engine_loop(show_window=False):
             set_gesture(gesture_name)
             detected_hand = "LEFT"
 
-            if gesture_name == "PINKY_FINGER" and confidence > 0.85:
-                temporal_gesture = temporal_detector.update(left_hand)
+            if gesture_name == "PINKY_FINGER" and confidence > CONF_THRESHOLD:
+                temporal_gesture = temporal_detector.update(
+                    left_hand, tracker.frame_width, tracker.frame_height
+                )
                 if temporal_gesture:
                     engine.execute(temporal_gesture)
                     detected_action = temporal_gesture
+                    system_state["total_gestures"] += 1
             else:
                 temporal_detector.reset()
 
         # =====================================================
         # EXECUTION COOLDOWN
+        # PINKY_FINGER is only a trigger state for swipe detection
+        # above, not an executable gesture itself. Right-hand mouse
+        # gestures are already executed directly via CursorController,
+        # so only left-hand classifier gestures reach ActionEngine here.
         # =====================================================
 
         current_time = time.time()
 
         if (
-            gesture_name
-            and confidence > 0.85
+            detected_hand == "LEFT"
+            and gesture_name
+            and gesture_name != "PINKY_FINGER"
+            and confidence > CONF_THRESHOLD
             and current_time - last_gesture_time > gesture_cooldown
         ):
             engine.execute(gesture_name, None)
@@ -278,8 +320,24 @@ def _engine_loop(show_window=False):
             system_state["fps"] = fps_counter
             fps_counter = 0
             fps_timer = time.time()
+            system_state["cpu_usage"] = psutil.cpu_percent(interval=None)
+            system_state["memory_mb"] = round(
+                psutil.Process().memory_info().rss / (1024 * 1024), 1
+            )
+            system_state["uptime_seconds"] = int(time.time() - engine_start_time)
 
         system_state["latency"] = int((time.time() - start_time) * 1000)
+
+      except Exception:
+        # A single bad frame (or a transient OS-level failure — e.g.
+        # pyautogui.moveTo() raising if Windows refuses SetCursorPos
+        # while a UAC-elevated window has focus) used to kill this whole
+        # background thread silently, leaving _engine_running stuck True
+        # forever: /start then became a permanent no-op until the process
+        # was restarted, and the frontend just looked "crashed". Log it
+        # and keep the loop alive instead.
+        traceback.print_exc()
+        time.sleep(0.05)
 
     tracker.release()
     cv2.destroyAllWindows()

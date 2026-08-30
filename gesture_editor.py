@@ -1,8 +1,12 @@
 import json
 import os
 import subprocess
+import sys
+
+from controller.actions import ACTION_REGISTRY
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = "data/gesture_action_map.json"
+CONFIG_PATH = os.path.join(BASE_DIR, "data", "gesture_action_map.json")
 
 
 def load_config():
@@ -27,9 +31,9 @@ def retrain_model():
     auto_collect_path = os.path.join(BASE_DIR, "training", "auto_collect.py")
     train_model_path = os.path.join(BASE_DIR, "training", "train_model.py")
 
-    subprocess.run(["python", auto_collect_path])
+    subprocess.run([sys.executable, auto_collect_path])
 
-    subprocess.run(["python", train_model_path])
+    subprocess.run([sys.executable, train_model_path])
 
     print("Training complete. GestureOS updated.")
 
@@ -39,7 +43,7 @@ def add_gesture():
 
     config = load_config()
 
-    gesture = input("Enter new gesture name: ").strip().upper()
+    gesture = input("Enter new gesture name: ").strip().upper().replace(" ", "_")
 
     if gesture in config:
         print("Gesture already exists.")
@@ -57,8 +61,8 @@ def add_gesture():
         url = input("Enter website URL: ").strip()
 
         config[gesture] = {
-            "type": "website",
-            "value": url
+            "action": "open_website",
+            "url": url
         }
 
     elif choice == "2":
@@ -66,17 +70,20 @@ def add_gesture():
         app = input("Enter full app path or app name: ").strip()
 
         config[gesture] = {
-            "type": "app",
-            "value": app
+            "action": "open_program",
+            "path": app
         }
 
     elif choice == "3":
 
-        action = input("Enter system action (volume_up, etc): ").strip()
+        action = input("Enter system action (volume_up, etc): ").strip().lower().replace(" ", "_")
+
+        if action not in ACTION_REGISTRY:
+            print(f"Unknown action: {action}")
+            return
 
         config[gesture] = {
-            "type": "system",
-            "value": action
+            "action": action
         }
 
     else:
@@ -110,15 +117,18 @@ def edit_gesture():
 
     choice = input("Enter choice: ")
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     dataset_path = os.path.join(BASE_DIR, "data", "dataset.csv")
 
     # OPTION 1: Change action only
     if choice == "1":
 
-        new_action = input("Enter new action: ").strip()
+        new_action = input("Enter new action: ").strip().lower().replace(" ", "_")
 
-        config[old_gesture] = new_action
+        if new_action not in ACTION_REGISTRY:
+            print(f"Unknown action: {new_action}")
+            return
+
+        config[old_gesture] = {"action": new_action}
 
         save_config(config)
 
@@ -165,7 +175,7 @@ def edit_gesture():
 
         train_model_path = os.path.join(BASE_DIR, "training", "train_model.py")
 
-        subprocess.run(["python", train_model_path])
+        subprocess.run([sys.executable, train_model_path])
 
         print("Gesture edit complete and model updated.")
 
@@ -197,7 +207,6 @@ def delete_gesture():
         print("Gesture not found in mapping.")
 
     # Step 2: Remove from dataset.csv
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     dataset_path = os.path.join(BASE_DIR, "data", "dataset.csv")
 
     if os.path.exists(dataset_path):
@@ -223,7 +232,7 @@ def delete_gesture():
 
     train_model_path = os.path.join(BASE_DIR, "training", "train_model.py")
 
-    subprocess.run(["python", train_model_path])
+    subprocess.run([sys.executable, train_model_path])
 
     print(f"{gesture} completely removed from GestureOS.")
 

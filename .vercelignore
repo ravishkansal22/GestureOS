@@ -1,0 +1,15 @@
+# Only the static dashboard (zesture-dashboard.html) is deployed to Vercel.
+# The gesture-control engine needs a real webcam and OS-level control, so
+# it must run locally — none of this is usable in a serverless environment.
+
+*.py
+requirements.txt
+
+controller/
+vision/
+backend/
+training/
+models/
+data/
+screenshots/
+__pycache__/

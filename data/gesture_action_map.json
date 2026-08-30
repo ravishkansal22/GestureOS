@@ -29,12 +29,8 @@
     "THUMBS_UP": {
         "action": "volume_down"
     },
-    "PINKY_FINGER": {
-        "type": "system",
-        "value": "None"
-    },
-    "L SIGN": {
-        "type": "system",
-        "value": "OPEN KAGGLE"
+    "L_SIGN": {
+        "action": "open_website",
+        "url": "https://kaggle.com"
     }
 }

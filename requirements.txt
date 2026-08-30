@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+opencv-python
+# Pinned: mediapipe>=0.10.30 drops the mp.solutions.hands API this project
+# uses; mediapipe<0.10.21 pulls in protobuf<5, which is incompatible with
+# tensorflow>=2.16 (hard-requires protobuf>=6.31 as of TF 2.21) and crashes
+# hand tracking with "AttributeError: ... has no attribute 'GetPrototype'"
+# the instant a hand is detected. 0.10.21-0.10.33 is the compatible window.
+mediapipe>=0.10.21,<0.10.35
+protobuf>=6.31.1
+numpy
+tensorflow
+pandas
+scikit-learn
+pyautogui
+screen_brightness_control
+psutil

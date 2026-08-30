@@ -1,17 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from retrain_pipeline import retrain
 from fastapi import BackgroundTasks
 import retrain_pipeline
-from training.train_model import train
+from controller.gesture_mapper import GestureMapper
+from controller.actions import ACTION_REGISTRY
 import time
 import main
-import subprocess
 import cv2
-import threading
-import json
-import os
 
 # ============================================================
 # FASTAPI INITIALIZATION
@@ -27,20 +23,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ============================================================
-# HELPER FUNCTIONS
-# ============================================================
-
-def load_gesture_map():
-    """
-    Safely loads gesture_action_map.json
-    """
-    try:
-        with open("data/gesture_action_map.json", "r") as f:
-            return json.load(f)
-    except Exception as e:
-        print("Error loading gesture map:", e)
-        return {}
+# Mouse gestures are handled directly by CursorController in main.py's
+# engine loop and never appear in gesture_action_map.json — they're
+# listed here only so /mappings can surface them as "Fixed" rows.
+FIXED_GESTURES = {
+    "CURSOR_MOVE": "CURSOR_MOVE",
+    "LEFT_CLICK": "MOUSE_LEFT_CLICK",
+    "RIGHT_CLICK": "MOUSE_RIGHT_CLICK",
+    "SCROLL": "SCROLL_PAGE",
+    "DRAG": "MOUSE_DRAG",
+}
 
 # ============================================================
 # ENGINE CONTROL ROUTES
@@ -87,7 +79,7 @@ def generate_frames():
             b"--frame\r\n"
             b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
         )
-        
+
 @app.get("/video")
 def video_feed():
     return StreamingResponse(
@@ -102,9 +94,13 @@ def video_feed():
 @app.get("/status")
 def get_status():
     """
-    Returns live system_state from main.py
+    Returns live system_state from main.py, with the custom-gesture
+    count refreshed from disk so it reflects gestures added since the
+    engine started.
     """
-    return main.system_state
+    state = dict(main.system_state)
+    state["custom_gestures"] = len(GestureMapper().list_gestures())
+    return state
 
 
 @app.get("/prediction")
@@ -121,37 +117,30 @@ def prediction():
 @app.get("/mappings")
 def get_mappings():
 
-    gesture_map = load_gesture_map()
+    gesture_map = GestureMapper().list_mappings()
 
-    fixed_gestures = [
-        "RIGHT_CLICK",
-        "LEFT_CLICK",
-        "SCROLL",
-        "DRAG",
-        "CURSOR_MOVE",
-        "LEFT_SWIPE_UP",
-        "LEFT_SWIPE_DOWN",
-        "LEFT_SWIPE_LEFT",
-        "LEFT_SWIPE_RIGHT"
+    response = [
+        {"gesture": gesture, "action": action, "status": "Fixed"}
+        for gesture, action in FIXED_GESTURES.items()
     ]
-
-    response = []
 
     for gesture, config in gesture_map.items():
 
-        action = config.get("action", "N/A")
-        status = "Fixed" if gesture in fixed_gestures else "Custom"
+        if isinstance(config, dict):
+            action = config.get("action", "N/A")
+        else:
+            action = str(config)
 
         response.append({
             "gesture": gesture,
             "action": action.upper(),
-            "status": status
+            "status": "Custom"
         })
 
     return response
 
 # ============================================================
-# RETRAIN PLACEHOLDER (No conflict change)
+# RETRAIN
 # ============================================================
 @app.post("/retrain")
 def retrain_model(background_tasks: BackgroundTasks):
@@ -161,11 +150,11 @@ def retrain_model(background_tasks: BackgroundTasks):
             main.retrain_state["phase"] = "training"
             main.retrain_state["progress"] = 10
 
-            from retrain_pipeline import retrain
-            retrain(None)
+            retrain_pipeline.retrain(None)
 
             main.retrain_state["progress"] = 100
             main.retrain_state["phase"] = "done"
+            main.retrain_state["last_retrain_at"] = time.time()
 
         except Exception as e:
             print("TRAIN ERROR:", e)
@@ -174,37 +163,39 @@ def retrain_model(background_tasks: BackgroundTasks):
 
     background_tasks.add_task(train_task)
 
-
     return {"status": "Training started"}
+
+
+def _normalize_gesture_name(name: str) -> str:
+    return name.strip().upper().replace(" ", "_")
+
+
 @app.post("/add_gesture")
 def add_gesture(data: dict):
 
     gesture = data.get("gesture")
-    action_type = data.get("type")
     value = data.get("value")
 
-    if not gesture:
-        return {"error": "Gesture name required"}
+    if not gesture or not value:
+        return {"error": "Gesture name and action required"}
 
-    gesture = gesture.upper()
+    gesture = _normalize_gesture_name(gesture)
+    action_name = str(value).strip().lower().replace(" ", "_")
 
-    gesture_map = load_gesture_map()
+    if action_name not in ACTION_REGISTRY:
+        return {"error": f"Unknown action: {action_name}"}
 
-    if gesture in gesture_map:
+    mapper = GestureMapper()
+
+    if mapper.gesture_exists(gesture):
         return {"error": "Gesture already exists"}
 
-    gesture_map[gesture] = {
-        "type": action_type,
-        "value": value
-    }
-
-    with open("data/gesture_action_map.json", "w") as f:
-        json.dump(gesture_map, f, indent=4)
+    mapper.add_gesture(gesture, {"action": action_name})
 
     return {"status": "Gesture added successfully"}
 
 # ============================================================
-# ROOT
+# DATA COLLECTION
 # ============================================================
 @app.post("/collect")
 def start_collection(data: dict):
@@ -215,16 +206,17 @@ def start_collection(data: dict):
         return {"error": "Gesture required"}
 
     main.ENGINE_MODE = "collect"
-    main.COLLECT_GESTURE = gesture
+    main.COLLECT_GESTURE = _normalize_gesture_name(gesture)
     main.COLLECT_COUNT = 0
 
     main.retrain_state["phase"] = "collecting"
     main.retrain_state["progress"] = 0
 
     return {"status": "Collection started"}
-    print("COLLECT ENDPOINT HIT")
-    print("ENGINE MODE SET TO:", main.ENGINE_MODE)
 
+# ============================================================
+# ROOT
+# ============================================================
 @app.get("/")
 def root():
     return {"message": "GestureOS Backend Running"}
